@@ -1,0 +1,9 @@
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "lib/pico-extras"]
+	path = lib/pico-extras
+	url = https://github.com/raspberrypi/pico-extras.git
+[submodule "lib/vult"]
+	path = lib/vult
+	url = https://github.com/vult-dsp/vult.git

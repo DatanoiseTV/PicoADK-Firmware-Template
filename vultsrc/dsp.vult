@@ -1,0 +1,53 @@
+/* You can use a this template to start a program */
+
+fun pitchToRate(d) return 8.1758*exp(0.0577623*d)/44100.0;
+
+
+// Used to soften the transitions of controls
+fun smooth(input){
+   mem x;
+   x = x+(input-x)*0.005;
+   return x;
+}
+
+// Returns true every time the input value changes
+fun change(x):bool {
+    mem pre_x;
+    val v:bool = pre_x<>x;
+    pre_x = x;
+    return v;
+}
+
+fun phasor(pitch,reset){
+    mem rate,phase;
+    if(change(pitch))
+        rate = pitchToRate(pitch);
+    phase = if reset then 0.0 else phase + rate;
+    phase = if phase > 1.0 then phase - 1.0 else phase;
+    return phase;
+}
+
+
+fun process(input:real){
+   val osc1 = phasor(440.0,false);
+   return osc1;
+}
+
+// Called when a note On is received
+and noteOn(note:int,velocity:int,channel:int){
+    mem gate = 1;
+}
+
+// Called when a note Off is received
+and noteOff(note:int,channel:int){
+    mem gate = 0;
+}
+
+// Called when a control changes
+and controlChange(control:int,value:int,channel:int){
+}
+
+// Called on initialization to define initial values
+and default(){
+    mem gate = 0;
+}
