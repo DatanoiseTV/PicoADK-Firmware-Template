@@ -234,4 +234,10 @@ and controlChange(control:int,value:int,channel:int){
 // Called on initialization to define initial values
 and default(){
 
+    mem voice2_f = 0.5;
+    mem voice2_res = 0.5;
+    mem time = 0.5;
+    mem feed = 0.4;
+    mem drum_pitch = 80.0;
+
 }

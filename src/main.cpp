@@ -22,6 +22,8 @@
 #include <task.h>
 #include <queue.h>
 
+#include "oled.h"
+
 #define USE_DIN_MIDI 1
 audio_buffer_pool_t *ap;
 
@@ -34,6 +36,12 @@ extern "C"
 {
 #endif
 
+    volatile long tick_start;
+    volatile long tick_end;
+
+    volatile long dsp_start;
+    volatile long dsp_end;
+
     void print_task(void *p)
     {
         char ptrTaskList[2048];
@@ -45,29 +53,68 @@ extern "C"
             printf("======================================================\n");
             printf("B = Blocked, R = Ready, D = Deleted, S = Suspended\n");
             printf("Milliseconds since boot: %d\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
+
+            printf("usb midi task took %d uS\n", tick_end - tick_start);
+            printf("dsp task took %d uS\n", dsp_end - dsp_start);
+
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
     }
 
+    void oled_task(void *p)
+    {
+
+        // I2C is "open drain", pull ups to keep signal high when no data is being
+        // sent
+        i2c_init(i2c_default, 1600 * 1000);
+        gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
+        gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+        gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
+        gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
+
+        char *words[] = {"RP2040", "DSP", "DEMO"};
+
+        ssd1306_t disp;
+        disp.external_vcc = false;
+        ssd1306_init(&disp, 128, 32, 0x3C, i2c0);
+        ssd1306_clear(&disp);
+
+        while (1)
+        {
+            for (int i = 0; i < sizeof(words) / sizeof(char *); ++i)
+            {
+                ssd1306_draw_string(&disp, 8, 8, 2, words[i]);
+                ssd1306_show(&disp);
+                vTaskDelay(pdMS_TO_TICKS(1000));
+                ssd1306_clear(&disp);
+            }
+        }
+    }
+
     // MIDI callbacks
-void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
-{
-    Dsp_noteOn(ctx, note, level, channel);
-    printf("note on (ch %d): %d %d\n", channel, note, level);
+    void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
+    {
+        Dsp_noteOn(ctx, note, level, channel);
+#ifdef DEBUG_MIDI
+        printf("note on (ch %d): %d %d\n", channel, note, level);
+#endif
+    }
 
-}
+    void note_off_callback(uint8_t note, uint8_t level, uint8_t channel)
+    {
+        Dsp_noteOff(ctx, note, channel);
+#ifdef DEBUG_MIDI
+        printf("note off (ch %d): %d %d\n", channel, note, level);
+#endif
+    }
 
-void note_off_callback(uint8_t note, uint8_t level, uint8_t channel)
-{
-    Dsp_noteOff(ctx, note, channel);
-    printf("note off (ch %d): %d %d\n", channel, note, level);
-}
-
-void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
-{
-    Dsp_controlChange(ctx, cc, value, channel);
-    //printf("cc (ch %d): %d %d\n", channel, cc, value);
-}
+    void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
+    {
+        Dsp_controlChange(ctx, cc, value, channel);
+#ifdef DEBUG_MIDI
+        printf("cc (ch %d): %d %d\n", channel, cc, value);
+#endif
+    }
 
     void usb_midi_task(void *pvParameters)
     {
@@ -75,9 +122,12 @@ void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
         midi_input_usb.setNoteOnCallback(note_on_callback);
         midi_input_usb.setNoteOffCallback(note_off_callback);
 
-        while(1){
+        while (1)
+        {
+            tick_start = to_us_since_boot(get_absolute_time());
             tud_task();
             midi_input_usb.process();
+            tick_end = to_us_since_boot(get_absolute_time());
         }
     }
 
@@ -109,7 +159,8 @@ void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
         ap = init_audio();
 
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES - 1, NULL);
-        xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES -1 , NULL);
+        xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(oled_task, "OLED", 10240, NULL, configMAX_PRIORITIES - 1, NULL);
         vTaskStartScheduler();
 
         while (1)
@@ -128,12 +179,15 @@ void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
         }
         int32_t *samples = (int32_t *)buffer->buffer->bytes;
 
+        dsp_start = to_us_since_boot(get_absolute_time());
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             int32_t smp = Dsp_process(ctx, 0) << 16u;
             samples[i * 2 + 0] = smp; // LEFT
             samples[i * 2 + 1] = smp; // RIGHT
         }
+        dsp_end = to_us_since_boot(get_absolute_time());
+
         buffer->sample_count = buffer->max_sample_count;
         give_audio_buffer(ap, buffer);
         return;
