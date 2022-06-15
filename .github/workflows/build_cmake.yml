@@ -18,8 +18,8 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "rp2040-vult.7z",
-            artifact_files: "rp2040-vult.*",
+            artifact: "P2040-DSP-FreeRTOS-Template.7z",
+            artifact_files: "P2040-DSP-FreeRTOS-Template.*",
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
@@ -275,7 +275,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "rp2040-vult.7z",
+            artifact: "P2040-DSP-FreeRTOS-Template.7z",
             os: ubuntu-latest
           }
     needs: release
