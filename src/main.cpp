@@ -33,13 +33,37 @@ MIDIInputUSB midi_input_usb;
 extern "C"
 {
 #endif
-    void usb_midi_task(void *pvParameters){
-        tud_task();
-        midi_input_usb.process();
+
+    void print_task(void *p)
+    {
+        char ptrTaskList[2048];
+        while (1)
+        {
+            vTaskList(ptrTaskList);
+            printf("\033[2J");
+            printf("\033[0;0HTask\t\tState\tPrio\tStack\tNum\n%s\n", ptrTaskList);
+            printf("======================================================\n");
+            printf("B = Blocked, R = Ready, D = Deleted, S = Suspended\n");
+            printf("Milliseconds since boot: %d\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+    }
+
+    void usb_midi_task(void *pvParameters)
+    {
+        while(1){
+            tud_task();
+            midi_input_usb.process();
+        }
     }
 
     int main(void)
     {
+        vreg_set_voltage(VREG_VOLTAGE_1_30);
+        sleep_ms(1);
+        set_sys_clock_khz(420000, true);
+        sleep_ms(1);
+
         board_init();
         tusb_init();
         stdio_init_all();
@@ -60,11 +84,14 @@ extern "C"
 
         ap = init_audio();
 
-        xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES-1, NULL);
+        xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES -1 , NULL);
         vTaskStartScheduler();
 
-        while(1){
-            ;;
+        while (1)
+        {
+            ;
+            ;
         }
     }
 
