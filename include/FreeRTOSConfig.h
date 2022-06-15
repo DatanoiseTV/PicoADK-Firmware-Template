@@ -36,9 +36,9 @@
 #define configUSE_TIME_SLICING                  1           // Allow FreeRTOS to switch tasks at each tick
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
-#define configCPU_CLOCK_HZ                      420000000   // 133MHz for RP2040
+#define configCPU_CLOCK_HZ                      400000000   // 133MHz for RP2040
 #define configTICK_RATE_HZ                      1000        // FreeRTOS beats per second
-#define configMAX_PRIORITIES                    10           // Max number of priority values (0-24)
+#define configMAX_PRIORITIES                    10          // Max number of priority values (0-24)
 #define configMINIMAL_STACK_SIZE                128
 #define configMAX_TASK_NAME_LEN                 16
 #define configUSE_16_BIT_TICKS                  0

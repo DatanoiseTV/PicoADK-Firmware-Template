@@ -61,7 +61,7 @@ extern "C"
     {
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(420000, true);
+        set_sys_clock_khz(400000, true);
         sleep_ms(1);
 
         board_init();
