@@ -13,7 +13,9 @@ set(PICO_EXTRAS_PATH "../lib/pico-extras")
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 
-set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/FreeRTOS-Kernel")
+set(PICO_BOARD datanoisetv_rp2040_dsp)
+
+set(FREERTOS_SRC_DIRECTORY "${PICO_SDK_PATH}/lib/tinyusb/lib/FreeRTOS-Kernel")
 
 add_library(FreeRTOS STATIC
     ${FREERTOS_SRC_DIRECTORY}/event_groups.c
@@ -42,7 +44,6 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
 
 # Generate Vult C++ code from Vult Code every time
 set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/vult/examples")
@@ -108,15 +109,12 @@ target_link_libraries(main
 
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
-        PICO_AUDIO_I2S_DATA_PIN=16
-        PICO_AUDIO_I2S_CLOCK_PIN_BASE=17
         )
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
-
 
 pico_set_boot_stage2(main slower_boot2)
 
