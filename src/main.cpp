@@ -49,8 +49,32 @@ extern "C"
         }
     }
 
+    // MIDI callbacks
+void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
+{
+    Dsp_noteOn(ctx, note, level, channel);
+    printf("note on (ch %d): %d %d\n", channel, note, level);
+
+}
+
+void note_off_callback(uint8_t note, uint8_t level, uint8_t channel)
+{
+    Dsp_noteOff(ctx, note, channel);
+    printf("note off (ch %d): %d %d\n", channel, note, level);
+}
+
+void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
+{
+    Dsp_controlChange(ctx, cc, value, channel);
+    //printf("cc (ch %d): %d %d\n", channel, cc, value);
+}
+
     void usb_midi_task(void *pvParameters)
     {
+        midi_input_usb.setCCCallback(cc_callback);
+        midi_input_usb.setNoteOnCallback(note_on_callback);
+        midi_input_usb.setNoteOffCallback(note_off_callback);
+
         while(1){
             tud_task();
             midi_input_usb.process();

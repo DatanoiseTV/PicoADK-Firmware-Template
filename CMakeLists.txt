@@ -62,7 +62,7 @@ add_custom_command(
                 -i ${VULT_EXAMPLE_PATH}/units
                 -ccode
                 -real fixed
-                -samplerate 32000
+                -samplerate 44100
                 -o vult 
         COMMENT "Transcompiling Vult DSP Code to C++."
 )
