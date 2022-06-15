@@ -43,7 +43,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
+
+add_subdirectory(lib/audio)
 
 # Generate Vult C++ code from Vult Code every time
 set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/vult/examples")
@@ -70,12 +72,7 @@ add_executable(main
     src/main.cpp 
     src/vultin.cpp
     src/midi_input_usb.cpp
-    src/audio.cpp
-    src/audio_subsystem.cpp
-    src/audio_i2s.c
     ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
-
-pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/piosrc/audio_i2s.pio)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
@@ -102,6 +99,7 @@ target_link_libraries(main
         pico_stdio_uart
         tinyusb_device
         tinyusb_board
+	Audio
         FreeRTOS
         )
 
