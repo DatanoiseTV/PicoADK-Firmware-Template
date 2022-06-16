@@ -53,10 +53,11 @@ extern "C"
             printf("======================================================\n");
             printf("B = Blocked, R = Ready, D = Deleted, S = Suspended\n");
             printf("Milliseconds since boot: %d\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
-
-            printf("usb midi task took %d uS\n", tick_end - tick_start);
             printf("dsp task took %d uS\n", dsp_end - dsp_start);
-
+            if (watchdog_caused_reboot()) {
+              printf("!!! WATCHDOG CAUSED REBOOT !!!\n");
+            }
+            watchdog_update();
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
     }
@@ -142,6 +143,18 @@ extern "C"
         board_init();
         tusb_init();
         stdio_init_all();
+
+        watchdog_enable(5000, 1);
+
+        if (watchdog_caused_reboot())
+        {
+            printf("Rebooted by Watchdog!\n");
+            return 0;
+        }
+        else
+        {
+            printf("Clean boot\n");
+        }
 
         // Initialize Vult DSP. This must match the DSP code.
         Dsp_process_init(ctx);
