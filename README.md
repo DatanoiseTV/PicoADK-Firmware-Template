@@ -1,5 +1,7 @@
 # Raspberry Pi RP2040 MCU Vult DSP template with FreeRTOS
 
+![PCB](https://github.com/DatanoiseTV/RP2040-DSP-FreeRTOS-Template/raw/main/hardware/image.png)
+
 This C++ boilerplate template allows for creating Synthesizers, Effects and other Audio DSP related projects based on the cheap and easily available RP2040 MCU. It targets the "RP2040 Eurorack DSP Demo Board", which I have made.
 
 The DSP board contains:
