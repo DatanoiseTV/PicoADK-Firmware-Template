@@ -6,6 +6,12 @@ fun smooth(input:real) : real {
   return x;
 }
 
+fun smooth2(input){
+   mem x;
+   x = x+(input-x)*0.005;
+   return x;
+}
+
 // Returns true if the value changes from 0 to anything
 fun edge(x:bool):bool {
     mem pre_x;
@@ -165,20 +171,31 @@ fun dcblock(x0:real) : real {
 
 fun voice1(pitch:real,detune:real,gate:real){
    mem pre_phase1;
+   mem pre_phase1_2;
+
    val phase1 = phasor(pitch,false);
    val comp   = 1.0 - phase1;
    val reset  = (pre_phase1 - phase1) > 0.5;
    pre_phase1 = phase1;
    val phase2 = phasor(pitch+smooth(detune)*32.0,reset);
    val sine  = sin(2.0*3.14159265359*phase2);
-   return (sine*comp)*env(gate,0.7);
+
+
+   val phase1_2 = phasor(pitch-12.0,false);
+   val comp_2   = 1.0 - phase1_2;
+   val reset_2  = (pre_phase1_2 - phase1_2) > 0.5;
+   pre_phase1_2 = phase1_2;
+   val phase2_2 = phasor(pitch-12.0+smooth(detune)*32.0,reset_2);
+   val sine_2  = sin(2.0*3.14159265359*phase2_2);
+
+   return ((sine*comp)*0.5 + (sine_2*comp_2)*0.5 )*env(gate,0.7);
 }
 
 
 fun voice2(pitch:real,f:real,res:real,time:real,feed:real,gate:real){
    val o = svf(dcblock(phasor(pitch+12.0,false)),f,res,0);
    val oo = o * env(gate,0.2);
-   return (oo+delay(oo,time,feed))/2.0;
+   return (oo+delay(oo,smooth2(time),smooth2(feed)))/2.0;
 }
 
 // Main processing function
@@ -187,9 +204,13 @@ fun process(input:real){
    mem voice1_gate,voice1_pitch,voice1_detune;
    mem voice2_gate,voice2_pitch,voice2_f,voice2_res;
    mem time,feed;
+   mem env_amt;
+
+   val env1 = Ad.do(voice1_gate, 0.0, 0.4) * (10.0*env_amt);
+   val voice1_detune_mixed = env1 + voice1_detune;
 
    val drum = drum(drum_gate, drum_pitch, 0.1, 0.8, 0.1);
-   val voice1_out = voice1(voice1_pitch,voice1_detune,voice1_gate);
+   val voice1_out = voice1(voice1_pitch,voice1_detune_mixed,voice1_gate);
    val voice2_out = voice2(voice2_pitch,voice2_f,voice2_res,time,feed,voice2_gate);
 
    return (voice1_out+drum+voice2_out*0.5)/3.0;
@@ -203,7 +224,7 @@ and noteOn(note:int,velocity:int,channel:int){
     voice1_gate = 1.0;
     voice1_pitch = real(note);
   }
-  if(note>=48 && note<=63) {
+  if(note>=48 && note<=80) {
     voice2_gate = 1.0;
     voice2_pitch = real(note);
   }
@@ -216,7 +237,7 @@ and noteOff(note:int,channel:int){
    if(note>=32 && note<=47) {
       voice1_gate = 0.0;
    }
-   if(note>=48 && note<=63) {
+   if(note>=48 && note<=80) {
       voice2_gate = 0.0;
    }
 }
@@ -229,15 +250,21 @@ and controlChange(control:int,value:int,channel:int){
   if(control==33) voice2_res = real(value)/127.0;
   if(control==34) time = real(value)/127.0;
   if(control==35) feed = real(value)/127.0;
+  if(control==37) env_amt = real(value)/127.0;
 }
 
 // Called on initialization to define initial values
 and default(){
 
-    mem voice2_f = 0.5;
-    mem voice2_res = 0.5;
+    mem voice2_f = 0.2;
+    mem voice2_res = 0.7;
     mem time = 0.5;
-    mem feed = 0.4;
+    mem feed = 0.2;
     mem drum_pitch = 80.0;
+    mem voice1_gate = 0.0;
+    mem voice2_gate = 0.0;
+    mem drum_gate = 0.0;
+
+    mem env_amt = 1.0;
 
 }

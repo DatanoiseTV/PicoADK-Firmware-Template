@@ -10,12 +10,10 @@ target_include_directories(Oled PUBLIC
 
 target_link_libraries(Oled pico_stdlib hardware_i2c)
 target_compile_options(Oled PUBLIC
-	-std=c++11
 	-Wno-deprecated-declarations
 	-Wno-unused-variable
 	-Wno-unused-function
 	-Wno-unused-parameter
 	-Wno-write-strings
 	-Wno-narrowing
-	-fno-permissive
 )

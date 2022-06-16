@@ -66,7 +66,7 @@ extern "C"
 
         // I2C is "open drain", pull ups to keep signal high when no data is being
         // sent
-        i2c_init(i2c_default, 1600 * 1000);
+        i2c_init(i2c_default, 400 * 1000);
         gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
         gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
         gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
@@ -77,13 +77,14 @@ extern "C"
         ssd1306_t disp;
         disp.external_vcc = false;
         ssd1306_init(&disp, 128, 32, 0x3C, i2c0);
+        ssd1306_invert(&disp, true);
         ssd1306_clear(&disp);
 
         while (1)
         {
             for (int i = 0; i < sizeof(words) / sizeof(char *); ++i)
             {
-                ssd1306_draw_string(&disp, 8, 8, 2, words[i]);
+                ssd1306_draw_string(&disp, 8, 10, 2, words[i]);
                 ssd1306_show(&disp);
                 vTaskDelay(pdMS_TO_TICKS(1000));
                 ssd1306_clear(&disp);
@@ -135,7 +136,7 @@ extern "C"
     {
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(400000, true);
+        set_sys_clock_khz(420000, true);
         sleep_ms(1);
 
         board_init();
@@ -158,7 +159,7 @@ extern "C"
 
         ap = init_audio();
 
-        xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(oled_task, "OLED", 10240, NULL, configMAX_PRIORITIES - 1, NULL);
         vTaskStartScheduler();

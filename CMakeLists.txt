@@ -96,6 +96,7 @@ target_link_libraries(main
         hardware_timer
         hardware_watchdog
         hardware_clocks
+        pico_bootsel_via_double_reset
         pico_util_buffer
         pico_multicore
         pico_stdio_uart
