@@ -1,4 +1,4 @@
-build
+build/*
 *.uf2
 *.bin
 *.elf
