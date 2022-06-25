@@ -19,7 +19,7 @@
 #include "hardware/regs/dreq.h"
 
 #include "audio_i2s.pio.h"
-#include "pico/audio_i2s.h"
+#include "audio_i2s.h"
 
 //#define CORE1_PROCESS_I2S_CALLBACK  // Multi-Core Processing Mode (Experimentally Single-Core seems better)
 //#define WATCH_DMA_TRANSFER_INTERVAL // Activate only for analysis because of watch overhead
