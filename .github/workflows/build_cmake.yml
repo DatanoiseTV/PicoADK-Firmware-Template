@@ -29,10 +29,12 @@ jobs:
 
     - name: Checkout submodules
       run: git submodule update --init --recursive
-
-    - name: Install toolchain
-      run: sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-
+      
+    - name: Install GNU Arm Embedded Toolchain
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+          release: latest
+          
     - uses: actions/setup-node@v3
       with:
         node-version: 16
