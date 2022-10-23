@@ -1,4 +1,6 @@
 # Raspberry Pi RP2040 MCU Vult DSP template with FreeRTOS
+![PicoDSP](https://user-images.githubusercontent.com/6614616/197399619-0ff170fe-6a3b-443c-9fc0-def74e03e564.png)
+
 
 ![PCB](https://github.com/DatanoiseTV/RP2040-DSP-FreeRTOS-Template/raw/main/hardware/image.png)
 
