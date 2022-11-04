@@ -161,6 +161,10 @@ fun process(input:real){
    mem lfo_rate,lfo_amt;
    mem time, feedback;
    mem mute;
+   mem wetdry;
+   mem filter_attack, filter_decay, filter_sustain, filter_release;
+   mem filter_env_amt, filter_cutoff, filter_resonance;
+   mem vca_attack, vca_decay, vca_sustain, vca_release;
 
    val gate = notes:mono_isGateOn();
 
@@ -177,9 +181,19 @@ fun process(input:real){
    val osc_out = osc_mix * amp;
    val delay_out = delay(osc_out,smooth(time),smooth(feedback));
 
+   // ADSR env for filter
+   val gate_real = if gate then 1.0 else 0.0;
+   val env_vcf = Adsr.do(gate_real, filter_attack, filter_decay, filter_sustain, filter_release) * 4.0;
+   val env_vca = Adsr.do(gate_real, vca_attack, vca_decay, vca_sustain, vca_release) * 4.0;
+   val filter_out = Svf.process(osc_out, filter_cutoff+(env_vcf*filter_env_amt), filter_resonance, 0);
+
+   // Mixes the dry and wet signals
+   val dry = filter_out * (1.0 - wetdry);
+   val wet = delay_out * wetdry;
+   val out = dry + wet;
 
    // mute workaround to avoid noise at startup
-   return smooth(if mute then 0.0 else 1.0) * (osc_out+delay_out)  / 4.0;
+   return env_vca * (out)  / 4.0;
 }
 
 // Called when a note On is received
@@ -202,6 +216,11 @@ and controlChange(control:int,value:int,channel:int){
    mem detune;
    mem lfo_rate, lfo_amt;
    mem time, feedback;
+   mem wetdry;
+   mem filter_attack, filter_decay, filter_sustain, filter_release;
+   mem filter_env_amt, filter_cutoff, filter_resonance;
+   mem vca_attack, vca_decay, vca_sustain, vca_release;
+
    // Control 30 defines the volume
    if(control==30) volume = real(value)/127.0;
    if(control==31) detune = real(value)/127.0;
@@ -209,6 +228,22 @@ and controlChange(control:int,value:int,channel:int){
    if(control==33) lfo_amt = 2.0*((real(value)/127.)-0.5);
    if(control==34) time = real(value)/127.0;
    if(control==35) feedback = real(value)/127.0;
+   if(control==36) wetdry = 2.0*((real(value)/127.)-0.5);
+
+   if(control==37) filter_attack = real(value)/127.0;
+   if(control==38) filter_decay = real(value)/127.0;
+   if(control==39) filter_sustain = real(value)/127.0;
+   if(control==40) filter_release = real(value)/127.0;
+
+   if(control==41) filter_env_amt = real(value)/127.0;
+   if(control==42) filter_cutoff = real(value)/127.0;
+   if(control==43) filter_resonance = real(value)/127.0;
+
+   if(control==44) vca_attack = real(value)/127.0;
+   if(control==45) vca_decay = real(value)/127.0;
+   if(control==46) vca_sustain = real(value)/127.0;
+   if(control==47) vca_release = real(value)/127.0;
+
 }
 
 // Called on initialization to define initial values
@@ -220,5 +255,20 @@ and default(){
    mem lfo_amt = -0.1;
    mem time = 0.8;
    mem feedback = 0.6;
+   mem wetdry = 0.4;
    mem mute = true;
+
+   mem filter_attack = 0.0;
+   mem filter_decay = 0.2;
+   mem filter_sustain = 0.4;
+   mem filter_release = 0.05;
+
+   mem filter_env_amt = 0.5;
+   mem filter_cutoff = 0.5;
+   mem filter_resonance = 0.5;
+
+   mem vca_attack = 0.0;
+   mem vca_decay = 0.4;
+   mem vca_sustain = 0.5;
+   mem vca_release = 0.2;
 }
