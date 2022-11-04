@@ -179,7 +179,7 @@ fun process(input:real){
    // gets the amplification by using a low-pass on the gate
    val amp = smooth(if gate then 1.0 else 0.0);
    val osc_out = osc_mix * amp;
-   val delay_out = delay(osc_out,smooth(time),smooth(feedback));
+   
 
    // ADSR env for filter
    val gate_real = if gate then 1.0 else 0.0;
@@ -187,7 +187,8 @@ fun process(input:real){
    val env_vca = Adsr.do(gate_real, vca_attack, vca_decay, vca_sustain, vca_release) * 4.0;
    val filter_out = Svf.process(osc_out, filter_cutoff+(env_vcf*filter_env_amt), filter_resonance, 0);
 
-   // Mixes the dry and wet signals
+   val delay_out = delay(filter_out,smooth(time),smooth(feedback));
+
    val dry = filter_out * (1.0 - wetdry);
    val wet = delay_out * wetdry;
    val out = dry + wet;
@@ -228,7 +229,7 @@ and controlChange(control:int,value:int,channel:int){
    if(control==33) lfo_amt = 2.0*((real(value)/127.)-0.5);
    if(control==34) time = real(value)/127.0;
    if(control==35) feedback = real(value)/127.0;
-   if(control==36) wetdry = 2.0*((real(value)/127.)-0.5);
+   if(control==36) wetdry = real(value)/127.0;
 
    if(control==37) filter_attack = real(value)/127.0;
    if(control==38) filter_decay = real(value)/127.0;
