@@ -179,7 +179,7 @@ fun process(input:real){
 
 
    // mute workaround to avoid noise at startup
-   return smooth(if mute then 0.0 else 1.0) * (osc_out+delay_out)  /4.0;
+   return smooth(if mute then 0.0 else 1.0) * (osc_out+delay_out)  /2.0;
 }
 
 // Called when a note On is received
@@ -187,7 +187,7 @@ and noteOn(note:int,velocity:int,channel:int){
 
    // mute workaround to avoid noise at startup
    mute = false;
-   
+
    mem pitch = real(notes:mono_noteOn(note));
 }
 
