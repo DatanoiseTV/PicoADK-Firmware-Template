@@ -25,6 +25,7 @@
 #include "oled.h"
 
 #define USE_DIN_MIDI 1
+#define DEBUG_MIDI 1
 audio_buffer_pool_t *ap;
 
 Dsp_process_type ctx;
@@ -137,24 +138,22 @@ extern "C"
     {
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(420000, true);
+        set_sys_clock_khz(226000, true);
         sleep_ms(1);
 
         board_init();
         tusb_init();
         stdio_init_all();
 
-        watchdog_enable(5000, 1);
+        // set gpio 25 (soft mute) to output and set to 1 (unmute)
+        gpio_init(25);
+        gpio_set_dir(25, GPIO_OUT);
+        gpio_put(25, 1);
 
-        if (watchdog_caused_reboot())
-        {
-            printf("Rebooted by Watchdog!\n");
-            return 0;
-        }
-        else
-        {
-            printf("Clean boot\n");
-        }
+        // set gpio 23 (deemphasis) to output and set to 1 (enable)
+        gpio_init(23);
+        gpio_set_dir(23, GPIO_OUT);
+        gpio_put(23, 1);
 
         // Initialize Vult DSP. This must match the DSP code.
         Dsp_process_init(ctx);
@@ -173,8 +172,8 @@ extern "C"
         ap = init_audio();
 
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
-        xTaskCreate(oled_task, "OLED", 10240, NULL, configMAX_PRIORITIES - 1, NULL);
+        //xTaskCreate(print_task, "TaskList", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        //xTaskCreate(oled_task, "OLED", 10240, NULL, configMAX_PRIORITIES - 1, NULL);
         vTaskStartScheduler();
 
         while (1)

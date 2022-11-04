@@ -1,15 +1,26 @@
+/*
+   = A simple synthesizer with one LFO and a Delay effect
+  CC30 - Volume
+  CC31 - Detune/Resonance
+  CC32 - LFO rate
+  CC33 - LFO amount (bipolar)
+  CC34 - Delay time
+  CC35 - Delay feedback
+*/
 
 // Used to soften the transitions of controls
 fun smooth(input:real) : real {
-  mem x;
-  x = x + (input-x) * 0.1;
-  return x;
-}
-
-fun smooth2(input){
    mem x;
    x = x+(input-x)*0.005;
    return x;
+}
+
+// Returns true every time the input value changes
+fun change(x:real):bool {
+    mem pre_x;
+    val v:bool = pre_x<>x;
+    pre_x = x;
+    return v;
 }
 
 // Returns true if the value changes from 0 to anything
@@ -20,12 +31,12 @@ fun edge(x:bool):bool {
     return v;
 }
 
-// Returns true every time the input value changes
-fun change(x:real):bool {
-    mem pre_x;
-    val v:bool = pre_x<>x;
-    pre_x = x;
-    return v;
+// Returns true every 'n' calls
+fun each(n:int) : bool {
+   mem count;
+   val ret = (count == 0);
+   count = (count + 1) % n;
+   return ret;
 }
 
 // Converts the MIDI note to increment rate at a 44100 sample rate
@@ -38,62 +49,9 @@ fun phasor(pitch:real,reset:bool){
     phase = if reset then 0.0 else (phase + rate) % 1.0;
     return phase;
 }
-and phasorInit() @[init] {
-   mem rate = pitchToRate(64.0);
-}
 
-fun sineWave(pitch:real,reset) : real {
-   mem buffer : array(real,128);
-   val phase = phasor(pitch,reset);
-   // Gets the position in the buffer to read
-   val index_r  = real(size(buffer)) * phase;
-   val index_i  = int(floor(index_r));
-
-   // Gets the decimal part of the position
-   val decimal  = index_r - real(index_i);
-   // Reads the values in the buffer
-   val x1 = get(buffer,index_i);
-   val x2 = get(buffer,(index_i+1) % size(buffer));
-   // Interpolates the value
-   val ret = (x2-x1)*decimal + x1;
-   return ret;
-}
-and sineInit() @[init] {
-   mem buffer;
-   val i = 0;
-   while(i<size(buffer)){
-      val w = 2.0 * 3.1415 * real(i)/(real(size(buffer)));
-      val x = sin(w);
-      _ = set(buffer,i,x);
-      i = i + 1;
-   }
-}
-
-fun slide(gate:real,rate:real) : real {
-   mem x;
-   if(edge(gate>0.0)) x = 1.0;
-   val speed = 0.0002 * rate;
-   x = if x < 0.001 then 0.0 else x-x*speed;
-   return x;
-}
-
-fun env(input:real,decay) : real {
-   mem x;
-   if(input>0.0)
-      x = x+(input-x)*0.01;
-    else{
-      x = x - x * 0.0005 * decay;
-      x = if x<0.001 then 0.0 else x;
-    }
-   return x;
-}
-
-fun drum(gate:real,pitch:real,stretch:real,time:real,decay:real){
-   val actual = (1.0 - env(gate,decay)) * 48.0;
-   return env(gate,decay) * sineWave(pitch-actual,edge(gate>0.0));
-}
-
-fun lfo(f,gate){
+// A simple LFO with reset signal
+fun lfo(f:real,gate:bool) : real {
     mem phase;
     val rate = f * 10.0/44100.0;
     if(edge(gate)) phase = 0.0;
@@ -102,44 +60,22 @@ fun lfo(f,gate){
     return sin(phase*2.0*3.141592653589793)-0.5;
 }
 
-// Calculates one step of the oversampled state-variable filter
-fun svf_step(input:real,g:real,q:real,sel:int) : real {
-   mem dlow, dband;
-   val low = dlow + g * dband;
-   val high = input - low - q*dband;
-   val band = g * high + dband;
-   val notch = high + low;
-
-   dband = clip(band,-1.,1.);
-   dlow  = clip(low,-1.,1.);
-   val output =
-      if sel == 0 then low else
-      if sel == 1 then high else
-      if sel == 2 then band else
-      notch;
-   return output;
+// Implements the resonant filter simulation as shown in
+// http://en.wikipedia.org/wiki/Phase_distortion_synthesis
+fun phd_osc(pitch:real,detune:real) : real {
+   mem pre_phase1; // used to detect when the phase wrapps from 1 to 0
+   val phase1 = phasor(pitch,false);
+   val comp   = 1.0 - phase1;
+   val reset  = (pre_phase1 - phase1) > 0.5;
+   pre_phase1 = phase1;
+   val phase2 = phasor(pitch+smooth(detune)*32.0,reset);
+   val sine  = sin(2.0*3.14159265359*phase2);
+   return sine*comp;
 }
 
-// Main function for the state-variable filter with 2x of oversampling
-fun svf(input,fc,q,sel){
-   mem g;
-   fc = clip(fc, 0., 1.);
-   q  = clip(q, 0., 1.);
-   val fix_q = 2. * (1. - q);
-
-   if(change(fc)){
-      g = fc/2.;
-   }
-
-   // In Vult oversamplig in very easy!
-   val x1 = step:svf_step(input,g,fix_q,sel);
-   val x2 = step:svf_step(input,g,fix_q,sel);
-
-   return (x1+x2)/2.;
-}
-
+// Simple delay.
 fun delay(x:real, time:real, feedback:real) : real {
-   mem buffer : array(real,22050);
+   mem buffer : array(real,30000);
    mem write_pos;
    // Constraints the parameter values
    time     = clip(time,0.0,1.0);
@@ -162,109 +98,127 @@ fun delay(x:real, time:real, feedback:real) : real {
    return ret;
 }
 
-fun dcblock(x0:real) : real {
-  mem x1,y1;
-  val y0 = x0-x1+y1*0.995;
-  x1,y1 = x0,y0;
-  return y0;
+/* These three functions handle midi on/off events in order to behave
+ * like a monophonic sinthesizer that can hold 4 notes */
+
+// Activates a note and returns the current note value
+fun mono_noteOn(n:int){
+   mem count,pre;
+   mem notes : array(int,4);
+   // Do not add more that the size of array
+   if(count < size(notes)) {
+     _ = set(notes,count,n);
+     pre = n;
+     if(count < size(notes)) count = count + 1;
+   }
+   return pre;
 }
 
-fun voice1(pitch:real,detune:real,gate:real){
-   mem pre_phase1;
-   mem pre_phase1_2;
-
-   val phase1 = phasor(pitch,false);
-   val comp   = 1.0 - phase1;
-   val reset  = (pre_phase1 - phase1) > 0.5;
-   pre_phase1 = phase1;
-   val phase2 = phasor(pitch+smooth(detune)*32.0,reset);
-   val sine  = sin(2.0*3.14159265359*phase2);
-
-
-   val phase1_2 = phasor(pitch-12.0,false);
-   val comp_2   = 1.0 - phase1_2;
-   val reset_2  = (pre_phase1_2 - phase1_2) > 0.5;
-   pre_phase1_2 = phase1_2;
-   val phase2_2 = phasor(pitch-12.0+smooth(detune)*32.0,reset_2);
-   val sine_2  = sin(2.0*3.14159265359*phase2_2);
-
-   return ((sine*comp)*0.5 + (sine_2*comp_2)*0.5 )*env(gate,0.7);
+// Deactivates a note and returns the following note value;
+and mono_noteOff(n:int){
+   mem count,pre;
+   mem notes : array(int,4);
+   val found = false;
+   val pos;
+   val i = 0;
+   // if there are no notes, no dot do anything
+   if(count == 0)
+      return pre;
+   // Finds the location of the note
+   while(i < size(notes) && not(found)){
+      if(get(notes,i) == n) {
+         pos = i;
+         found = true;
+      }
+      i = i + 1;
+   }
+   // if the note was found moves all the notes one location
+   if(found) {
+      val k = pos + 1;
+      while(k < size(notes)) {
+         _ = set(notes,k-1,get(notes,k));
+         k = k + 1;
+      }
+      // If found, decrease the number of active notes
+      if(found && count>0) {
+         count = count - 1;
+         pre = get(notes,count - 1);
+      }
+   }
+   return pre;
 }
 
-
-fun voice2(pitch:real,f:real,res:real,time:real,feed:real,gate:real){
-   val o = svf(dcblock(phasor(pitch+12.0,false)),f,res,0);
-   val oo = o * env(gate,0.2);
-   return (oo+delay(oo,smooth2(time),smooth2(feed)))/2.0;
+// Returns 1 if any note is active
+and mono_isGateOn() {
+   mem count;
+   return count > 0;
 }
 
 // Main processing function
 fun process(input:real){
-   mem drum_gate,drum_pitch;
-   mem voice1_gate,voice1_pitch,voice1_detune;
-   mem voice2_gate,voice2_pitch,voice2_f,voice2_res;
-   mem time,feed;
-   mem env_amt;
+   mem volume,detune; // values set in 'controlChange'
+   mem pitch;
+   mem lfo_rate,lfo_amt;
+   mem time, feedback;
+   mem mute;
 
-   val env1 = Ad.do(voice1_gate, 0.0, 0.4) * (10.0*env_amt);
-   val voice1_detune_mixed = env1 + voice1_detune;
+   val gate = notes:mono_isGateOn();
 
-   val drum = drum(drum_gate, drum_pitch, 0.1, 0.8, 0.1);
-   val voice1_out = voice1(voice1_pitch,voice1_detune_mixed,voice1_gate);
-   val voice2_out = voice2(voice2_pitch,voice2_f,voice2_res,time,feed,voice2_gate);
+   // creates one LFO
+   val lfo_val = lfo(lfo_rate,gate)*lfo_amt;
 
-   return (voice1_out+drum+voice2_out*0.5)/3.0;
+   // creates two oscillators
+   val o1 = Sawcore.process(Util.pitchToCv(pitch), 0.0) * 0.5;
+   val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val), 0.0) * 0.5;
+   val osc_mix = o1 + o2;
+
+   // gets the amplification by using a low-pass on the gate
+   val amp = smooth(if gate then 1.0 else 0.0);
+   val osc_out = osc_mix * amp;
+   val delay_out = delay(osc_out,smooth(time),smooth(feedback));
+
+
+   // mute workaround to avoid noise at startup
+   return smooth(if mute then 0.0 else 1.0) * (osc_out+delay_out)  /4.0;
 }
 
 // Called when a note On is received
 and noteOn(note:int,velocity:int,channel:int){
-  if(note==12)
-    drum_gate = 1.0;
-  if(note>=32 && note<=47) {
-    voice1_gate = 1.0;
-    voice1_pitch = real(note);
-  }
-  if(note>=48 && note<=80) {
-    voice2_gate = 1.0;
-    voice2_pitch = real(note);
-  }
+
+   // mute workaround to avoid noise at startup
+   mute = false;
+   
+   mem pitch = real(notes:mono_noteOn(note));
 }
 
 // Called when a note Off is received
 and noteOff(note:int,channel:int){
-   if(note==12)
-      drum_gate = 0.0;
-   if(note>=32 && note<=47) {
-      voice1_gate = 0.0;
-   }
-   if(note>=48 && note<=80) {
-      voice2_gate = 0.0;
-   }
+   mem pitch = real(notes:mono_noteOff(note));
 }
 
 // Called when a control changes
 and controlChange(control:int,value:int,channel:int){
-  if(control==30) drum_pitch = 42.0 + 24.0 * real(value)/127.0;
-  if(control==31) voice1_detune = real(value)/127.0;
-  if(control==32) voice2_f = real(value)/127.0;
-  if(control==33) voice2_res = real(value)/127.0;
-  if(control==34) time = real(value)/127.0;
-  if(control==35) feed = real(value)/127.0;
-  if(control==37) env_amt = real(value)/127.0;
+   mem volume;
+   mem detune;
+   mem lfo_rate, lfo_amt;
+   mem time, feedback;
+   // Control 30 defines the volume
+   if(control==30) volume = real(value)/127.0;
+   if(control==31) detune = real(value)/127.0;
+   if(control==32) lfo_rate = real(value)/127.0;
+   if(control==33) lfo_amt = 2.0*((real(value)/127.)-0.5);
+   if(control==34) time = real(value)/127.0;
+   if(control==35) feedback = real(value)/127.0;
 }
 
 // Called on initialization to define initial values
 and default(){
-
-    mem voice2_f = 0.2;
-    mem voice2_res = 0.7;
-    mem time = 0.5;
-    mem feed = 0.2;
-    mem drum_pitch = 80.0;
-    mem voice1_gate = 0.0;
-    mem voice2_gate = 0.0;
-    mem drum_gate = 0.0;
-
-    mem env_amt = 1.0;
-
+   mem volume = 1.0;
+   mem pitch = 45.0;
+   mem detune = 0.1;
+   mem lfo_rate = 0.07;
+   mem lfo_amt = -0.1;
+   mem time = 0.8;
+   mem feedback = 0.6;
+   mem mute = true;
 }
