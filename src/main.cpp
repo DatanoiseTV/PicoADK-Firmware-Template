@@ -196,6 +196,7 @@ extern "C"
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             int32_t smp = Dsp_process(ctx, 0) << 16u;
+            smp = smp <= -0x8000 ? -0x8000 : (smp > 0x7fff ? 0x7fff : smp);
             samples[i * 2 + 0] = smp; // LEFT
             samples[i * 2 + 1] = smp; // RIGHT
         }
