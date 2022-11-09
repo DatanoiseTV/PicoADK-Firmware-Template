@@ -234,7 +234,7 @@ jobs:
       run: cmake --install build --prefix instdir --strip
 
     - name: Pack Firmware as ZIP file.
-      run: cmake -E zip ./${{ matrix.config.artifact }} build/${{ matrix.config.artifact_files }}
+      run: zip ./${{ matrix.config.artifact }} build/${{ matrix.config.artifact_files }}
 
 
     - name: Upload
