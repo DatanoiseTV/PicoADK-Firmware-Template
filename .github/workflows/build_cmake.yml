@@ -1,4 +1,4 @@
-name: CMake Build Matrix
+name: Build Firmware
 
 on: [push, pull_request]
 
@@ -18,7 +18,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "main.7z",
+            artifact: "firmware.zip",
             artifact_files: "main.*",
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
@@ -41,6 +41,9 @@ jobs:
 
     - name: Install vult
       run: npm install vult -g
+      
+    - name: Install zip
+      run: apt update && apt install -y zip
 
     - name: Download Ninja and CMake
       shell: cmake -P {0}
@@ -230,9 +233,8 @@ jobs:
     - name: Install Strip
       run: cmake --install build --prefix instdir --strip
 
-
-    - name: Pack
-      run: cmake -E tar cfv ./${{ matrix.config.artifact }} --format=7zip build/${{ matrix.config.artifact_files }}
+    - name: Pack Firmware as ZIP file.
+      run: cmake -E zip ./${{ matrix.config.artifact }} build/${{ matrix.config.artifact_files }}
 
 
     - name: Upload
@@ -277,7 +279,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "main.7z",
+            artifact: "firmware.zip",
             os: ubuntu-latest
           }
     needs: release
