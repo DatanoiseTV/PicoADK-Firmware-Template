@@ -41,3 +41,7 @@ The pipeline will trigger a new release build on following tagging scheme:
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 ```
+
+# Hardware
+
+The currently best hardware options is the [PicoADK board](https://github.com/DatanoiseTV/PicoDSP-Hardware)
