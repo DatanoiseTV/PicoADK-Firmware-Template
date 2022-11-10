@@ -18,7 +18,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "firmware.zip",
+            artifact: "firmware.uf2",
             artifact_files: "main.*",
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
@@ -43,7 +43,7 @@ jobs:
       run: npm install vult -g
       
     - name: Install zip
-      run: apt update && apt install -y zip
+      run: sudo apt update && sudo apt install -y zip
 
     - name: Download Ninja and CMake
       shell: cmake -P {0}
@@ -233,9 +233,8 @@ jobs:
     - name: Install Strip
       run: cmake --install build --prefix instdir --strip
 
-    - name: Pack Firmware as ZIP file.
-      run: cmake -E zip ./${{ matrix.config.artifact }} build/${{ matrix.config.artifact_files }}
-
+    - name: Copy UF2 File 
+      run: cp build/main.uf2 ./${{ matrix.config.artifact }}
 
     - name: Upload
       uses: actions/upload-artifact@v2
@@ -279,7 +278,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "firmware.zip",
+            artifact: "firmware.uf2",
             os: ubuntu-latest
           }
     needs: release
@@ -310,4 +309,4 @@ jobs:
         upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
         asset_path: ./${{ matrix.config.artifact }}
         asset_name: ${{ matrix.config.artifact }}
-        asset_content_type: application/x-gtar
+        asset_content_type: application/binary
