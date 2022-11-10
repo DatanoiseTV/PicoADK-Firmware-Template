@@ -269,7 +269,7 @@ jobs:
         name: upload_url
 
   publish:
-    #if: contains(github.ref, 'tags/')
+    if: contains(github.ref, 'tags/')
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
