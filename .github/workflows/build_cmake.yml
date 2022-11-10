@@ -278,7 +278,7 @@ jobs:
         config:
         - {
             name: "Ubuntu Latest / arm-none-eabi-gcc",
-            artifact: "firmware.zip",
+            artifact: ${{ matrix.config.artifact }},
             os: ubuntu-latest
           }
     needs: release
