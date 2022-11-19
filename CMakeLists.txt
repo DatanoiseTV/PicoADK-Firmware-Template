@@ -72,6 +72,7 @@ add_custom_command(
 add_executable(main
     src/usb_descriptors.c
     src/main.cpp 
+    src/picoadk_hw.cpp
     src/vultin.cpp
     src/midi_input_usb.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
