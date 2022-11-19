@@ -22,7 +22,6 @@ Some steps how to be performed for the peripherals of the board to function prop
 * If you want to use the 4 LEDs next to the USB Type-C connector, you must set GPIO2-5 (shared) as output.
 * If you want to use the Audio DAC, your software needs to control the XSMT signal (see [PicoADK Hardware Repo](https://github.com/DatanoiseTV/PicoADK-Hardware))
 * If you are running the CPU cores at more than 133 MHz, it might be necessary to lower the Flash Clock Speed. This is done [here](https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template/blob/main/CMakeLists.txt#L118).
-* 
 
 ### Structure
 
