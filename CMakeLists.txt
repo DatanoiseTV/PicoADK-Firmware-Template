@@ -44,7 +44,11 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
+include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}
+        "./lib/pico-sdk/lib/tinyusb/src"
+        ".")
 
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
@@ -70,7 +74,7 @@ add_custom_command(
 
 
 add_executable(main
-    src/usb_descriptors.c
+    #src/usb_descriptors.c
     src/main.cpp 
     src/picoadk_hw.cpp
     src/vultin.cpp
@@ -101,7 +105,7 @@ target_link_libraries(main
         pico_util_buffer
         pico_multicore
         pico_stdio_uart
-        tinyusb_device
+        tinyusb_host
         tinyusb_board
 	Audio
         Oled

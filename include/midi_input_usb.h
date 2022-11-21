@@ -6,6 +6,7 @@
 #include "hardware/uart.h"
 #include "project_config.h"
 #include "tusb.h"
+#include "class/midi/midi_host.h"
 
 class MIDIInputUSB
 {

@@ -88,7 +88,11 @@ extern "C"
 
         while (1)
         {
+            #ifdef CFG_TUD_ENABLED
             tud_task();
+            #elif CFG_TUH_ENABLED
+            tuh_task();
+            #endif
             usbmidi.process();
         }
     }
