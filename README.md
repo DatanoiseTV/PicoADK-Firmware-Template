@@ -1,7 +1,8 @@
 # PicoADK FreeRTOS Template (with VultDSP runtime and USB MIDI)
 ![PicoADK Boards](https://user-images.githubusercontent.com/6614616/202743141-287a1278-63dd-40a0-bf19-9c3cd2b5591f.jpg)
 
-![PicoDSP](https://user-images.githubusercontent.com/6614616/197399619-0ff170fe-6a3b-443c-9fc0-def74e03e564.png)
+![PicoADK Render](https://user-images.githubusercontent.com/6614616/203218532-9e1f4f0e-e546-4674-9c91-a76579b1532a.png)
+
 
 This C++ boilerplate template allows for creating Synthesizers, Effects and other Audio DSP related projects based on the cheap and easily available RP2040 MCU. It targets the "PicoADK" board (link below), which I have made.
 ## Prerequisites
