@@ -1,6 +1,4 @@
 # PicoADK FreeRTOS Template (with VultDSP runtime and USB MIDI)
-![PicoADK Boards](https://user-images.githubusercontent.com/6614616/202743141-287a1278-63dd-40a0-bf19-9c3cd2b5591f.jpg)
-
 ![PicoADK Render](https://user-images.githubusercontent.com/6614616/203218532-9e1f4f0e-e546-4674-9c91-a76579b1532a.png)
 
 
@@ -33,7 +31,10 @@ git push origin v1.0.0
 
 # Hardware
 
-The currently best hardware options is the [PicoADK board](https://github.com/DatanoiseTV/PicoDSP-Hardware)
+The currently best hardware option is the [PicoADK board](https://github.com/DatanoiseTV/PicoDSP-Hardware)
+
+![PicoADK Board](https://user-images.githubusercontent.com/6614616/202743141-287a1278-63dd-40a0-bf19-9c3cd2b5591f.jpg)
+
 
 # Getting RAM and flash usage statistics
 
