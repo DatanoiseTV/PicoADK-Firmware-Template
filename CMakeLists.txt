@@ -35,10 +35,10 @@ target_include_directories(FreeRTOS PUBLIC
     ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
 )
 
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_VULT_COMPILER "/usr/local/bin/vultc")
+#list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+#set(CMAKE_VULT_COMPILER "/usr/local/bin/vultc")
 
-project(main C CXX ASM VULT)
+project(main C CXX ASM)
 
 
 
@@ -81,8 +81,7 @@ add_executable(main
     src/picoadk_hw.cpp
     src/vultin.cpp
     src/midi_input_usb.cpp
-    )
-    #${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
+    ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
