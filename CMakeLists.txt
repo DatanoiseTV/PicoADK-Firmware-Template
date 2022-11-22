@@ -35,7 +35,12 @@ target_include_directories(FreeRTOS PUBLIC
     ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
 )
 
-project(main C CXX ASM)
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_VULT_COMPILER "/usr/local/bin/vultc")
+
+project(main C CXX ASM VULT)
+
+
 
 # set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 
