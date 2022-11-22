@@ -75,12 +75,14 @@ add_custom_command(
 
 
 add_executable(main
+    vultsrc/dsp.vult
     src/usb_descriptors.c
     src/main.cpp 
     src/picoadk_hw.cpp
     src/vultin.cpp
     src/midi_input_usb.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
+    )
+    #${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
