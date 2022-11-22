@@ -119,7 +119,11 @@ target_link_libraries(main
 
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
-        )
+)
+
+target_link_options(main PRIVATE
+        -Xlinker --print-memory-usage
+)
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
