@@ -33,3 +33,9 @@ git push origin v1.0.0
 # Hardware
 
 The currently best hardware options is the [PicoADK board](https://github.com/DatanoiseTV/PicoDSP-Hardware)
+
+# RAM and flash usage
+
+![image](https://user-images.githubusercontent.com/6614616/203217505-7b235539-9cc0-42c1-a4ca-f910ef306fb1.png)
+
+Your statically allocated memory and flash usage will be reported upon linking.

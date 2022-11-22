@@ -128,6 +128,7 @@ extern "C"
         // Create FreeRTOS Tasks for USB MIDI and printing statistics
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         vTaskStartScheduler();
 
         // Idle loop. 

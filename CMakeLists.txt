@@ -35,7 +35,12 @@ target_include_directories(FreeRTOS PUBLIC
     ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
 )
 
+#list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+#set(CMAKE_VULT_COMPILER "/usr/local/bin/vultc")
+
 project(main C CXX ASM)
+
+
 
 # set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 
@@ -70,6 +75,7 @@ add_custom_command(
 
 
 add_executable(main
+    vultsrc/dsp.vult
     src/usb_descriptors.c
     src/main.cpp 
     src/picoadk_hw.cpp
@@ -112,7 +118,11 @@ target_link_libraries(main
 
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
-        )
+)
+
+target_link_options(main PRIVATE
+        -Xlinker --print-memory-usage
+)
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
