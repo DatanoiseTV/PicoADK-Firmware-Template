@@ -41,3 +41,7 @@ The currently best hardware option is the [PicoADK board](https://github.com/Dat
 ![image](https://user-images.githubusercontent.com/6614616/203217505-7b235539-9cc0-42c1-a4ca-f910ef306fb1.png)
 
 Your statically allocated memory and flash usage will be reported upon linking.
+
+## Community
+
+You can find the PicoADK at Discord right [here](https://discord.gg/gcwAGZ9e) and a community discussion board on [GitHub Discussions](https://github.com/DatanoiseTV/PicoADK-Hardware/discussions)
