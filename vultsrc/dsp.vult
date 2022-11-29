@@ -1,17 +1,13 @@
-/*
-   = A simple synthesizer with one LFO and a Delay effect
-  CC30 - Volume
-  CC31 - Detune/Resonance
-  CC32 - LFO rate
-  CC33 - LFO amount (bipolar)
-  CC34 - Delay time
-  CC35 - Delay feedback
-*/
-
 // Used to soften the transitions of controls
 fun smooth(input:real) : real {
    mem x;
    x = x+(input-x)*0.005;
+   return x;
+}
+
+fun smooth2(input:real) : real {
+   mem x;
+   x = x+(input-x)*0.0001;
    return x;
 }
 
@@ -40,7 +36,7 @@ fun each(n:int) : bool {
 }
 
 // Converts the MIDI note to increment rate at a 44100 sample rate
-fun pitchToRate(d) return 8.1758*exp(0.0577623*d)/44100.0;
+fun pitchToRate(d) return 8.1758*exp(0.0577623*d)/samplerate();
 
 fun phasor(pitch:real,reset:bool){
     mem rate,phase;
@@ -53,7 +49,7 @@ fun phasor(pitch:real,reset:bool){
 // A simple LFO with reset signal
 fun lfo(f:real,gate:bool) : real {
     mem phase;
-    val rate = f * 10.0/44100.0;
+    val rate = f * 10.0/samplerate();
     if(edge(gate)) phase = 0.0;
     phase = phase + rate;
     if(phase>1.0) phase = phase-1.0;
@@ -75,7 +71,7 @@ fun phd_osc(pitch:real,detune:real) : real {
 
 // Simple delay.
 fun delay(x:real, time:real, feedback:real) : real {
-   mem buffer : array(real,30000);
+   mem buffer : array(real,32000);
    mem write_pos;
    // Constraints the parameter values
    time     = clip(time,0.0,1.0);
@@ -96,6 +92,28 @@ fun delay(x:real, time:real, feedback:real) : real {
    write_pos = (write_pos+1) % size(buffer);
    _ = set(buffer,write_pos,clip(x+feedback*ret,-1.0,1.0));
    return ret;
+}
+
+fun combFilter(x:real, time: real){
+
+   // y is a delayed and inverted version of x
+   time = clip(time,0.0,1.0);
+   mem buffer : array(real,256);
+   mem write_pos;
+   val index_r  = real(size(buffer)) * time;
+   val index_i  = int(floor(index_r));
+   val delta    = write_pos - index_i;
+   val read_pos = if delta < 0 then size(buffer)+delta else delta;
+   val decimal  = index_r - real(index_i);
+   val x1 = get(buffer,read_pos);
+   val x2 = get(buffer,(read_pos+1) % size(buffer));
+   val y = (x2-x1)*decimal + x1;
+   write_pos = (write_pos+1) % size(buffer);
+   _ = set(buffer,write_pos,x);
+
+   // The output is the sum of x and y (inverted)
+   return x + (-1.0*y);
+
 }
 
 /* These three functions handle midi on/off events in order to behave
@@ -154,6 +172,224 @@ and mono_isGateOn() {
    return count > 0;
 }
 
+fun env_drum(gate:real, a:real, h:real, d:real) {
+   mem state;
+   mem out;
+   mem rate;
+   mem target;
+   mem hold_phase;
+
+   val release = 0;
+   val attack  = 1;
+   val hold    = 2;
+   val reset   = 3;
+
+   val bgate = gate > 0.0;
+
+   if(Util.edge(bgate)) {
+      state = reset;
+   }
+
+   val resetting = if state == reset then 1.0 else 0.0;
+
+   // transitions
+
+   if(Util.edge(out > 1024.0)) {
+      hold_phase = 0.0;
+      state = hold;
+   }
+   if(out < 10.0 && state == reset) {
+      state = attack;
+   }
+   if(hold_phase > 100.0 && state == hold) {
+      state = release;
+   }
+
+   // states
+
+   if(state == reset) {
+      rate = 1.0 / (100.0 * 0.01 + 0.01);
+      target = 0.0;
+   }
+   if(state == attack) {
+      rate = 1.0 / (100.0 * a + 0.01);
+      target = 1.2 * 1024.0;
+   }
+   if(state == hold) {
+      val hrate = 1.0 / (100.0 * h + 0.01);
+      hold_phase = hold_phase + hrate;
+   }
+   if(state == release) {
+      rate = 1.0 / (100.0 * d + 0.01);
+      target = 0.0;
+   }
+
+   out = out + (target - out) * rate * 0.005;
+
+
+   return clip(out/1024.0,0.0,1.0), resetting;
+}
+
+fun env_swept(gate, start, end, rate) {
+   mem out;
+
+   val a_rate = 1.0 / (100.0 * rate + 0.01);
+
+   val bgate = gate > 0.0;
+
+   out = out + ((end *  1024.0) - out) * rate * 0.004;
+
+
+   if(Util.edge(bgate))
+      out = start * 1024.0;
+
+   return out/1024.0;
+}
+
+fun tricore(cv:real, reset:real, disable:real) : real {
+   mem rate;
+   mem reset_state;
+   mem phase, reset_phase;
+   mem direction;
+   val out = 0.0;
+   // Calculate the rate only when the cv changes
+   if(Util.change(cv)) {
+      rate = 4.0 * Util.cvToRate(cv);
+   }
+   // Determine the next value
+   val new_phase = phase + if direction then rate else -rate;
+
+   val bdisable = disable > 0.5;
+
+   // if reset or disable were triggered, then enter reset state
+   if(Util.edge(reset > 0.0) || Util.edge(bdisable)) {
+      // this is gonna be the initial value from which the oscillator starts resetting
+      reset_phase = phase;
+      // enter the reset state
+      reset_state = true;
+      new_phase = 0.0;
+   }
+
+   // wrap the phase in both directions
+   if(new_phase > 1024.0) {
+      new_phase = 1024.0 - (new_phase - 1024.0);
+      direction = false;
+   }
+   else if(new_phase < -1024.0) {
+      direction = true;
+      new_phase = -1024.0 + (new_phase + 1024.0);
+   }
+   // update the phase, if disabled just make it zero
+   phase = if bdisable then 0.0 else new_phase;
+
+   if(reset_state) {
+      // exponentially reduce the value until, if it's reseted and not dissable
+      // when the value is very small goes out of reset state
+      if(abs(reset_phase) > 10.0 || bdisable) {
+         // dissable produces a softer transition
+         val reset_speed = if bdisable then 0.01 else 0.5;
+         reset_phase = reset_phase - reset_phase * reset_speed;
+      }
+      else {
+         reset_phase = if reset_phase > 10.0 then reset_phase else 0.0;
+         reset_state = false;
+         direction = true;
+      }
+      out = reset_phase;
+   }
+   // the output is the sum of the ideal saw wave and the reset transition
+   out = out + phase;
+   return out / 1024.0;
+}
+
+
+fun saturate_table(x) @[table(size=10,min=0.0,max=6.0)] {
+  return tanh(x);
+}
+
+
+fun saturate(x) {
+  if(x==0.0) return 0.0;
+  val fixed, sign = if x > 0.0 then x,false else -x, true;
+  val out = 0.0;
+  if(fixed > 6.0) {
+    out = 1.0;
+  }
+  else {
+    out = saturate_table(fixed);
+  }
+  out = if sign then -out else out;
+  return out;
+}
+
+fun pinker(x:real){
+   mem w1;
+   val b0 = 0.02771298631913731;
+   val b1 = 0.02771298631913731;
+   val a1 = -0.9445740273617255;
+   val w0 = x - a1*w1;
+   val y0 = b0*w0 + b1*w1;
+   w1 = w0;
+   return y0;
+}
+
+fun osc_noisef(color) {
+   mem x1 = (x1 * 17389 + 7919) % 32768;
+   val y1 = real(x1)/32768.0;
+   mem x2 = (x2 * 27449 + 12553) % 32768;
+   val y2 = real(x2)/32768.0;
+   val out = if color then pinker(y1-y2) else y1-y2;
+   return 2.0*out;
+}
+
+
+fun unit_drum(gate, odecay, pitch, swept, noise) {
+   // Envelope of the drum. One parameter affects the hold and relase
+   val osc_env, env_reset = env_drum(gate, 0.005, 0.1 + odecay ,odecay+0.01);
+   // Change of pitch
+   val cv = env_swept(1.0-env_reset, pitch + swept*0.4, pitch, 0.1);
+   // Main triangle oscillator
+   // Note: the oscillator is dissabled while the nevelop resets
+   val osc = tricore(cv, 0.0, env_reset);
+   // Saturates the triangle to get a sine with some harmonics
+   val osc_sat = saturate(1.5 *  osc);
+
+
+   val noise_env, _ = env_drum(gate, 0.001, 0.01, noise * 0.01+0.001);
+   val noise_osc = noise * osc_noisef(true) / 3.0;
+
+   return osc_env * osc_sat + noise_env * noise_osc;
+}
+
+fun delay_600(x, n) {
+	mem buffer:array(real,2400);
+	mem i;
+	val d = i - n;
+   	val r = if d < 0 then size(buffer)+d else d;
+	i = (i + 1) % size(buffer);
+	val y = get(buffer, r);
+	_ = set(buffer, i, x);
+	return y;
+}
+
+fun ap(x, g, n) {
+	mem pre_x, pre_y;
+	val y = - x + (1.0 + g) * pre_x + g * pre_y;
+	pre_x = delay_600(x,n);
+	pre_y = delay_600(y,n);
+
+	return y;
+}
+
+fun reverb(x) {
+	val y = ap(x, 0.5, 255);
+	y = ap(y, 0.5, 556);
+	y = ap(y, 0.5, 441);
+	y = ap(y, 0.5, 341);
+
+   return y;
+}
+
 // Main processing function
 fun process(input:real){
    mem volume,detune; // values set in 'controlChange'
@@ -165,6 +401,7 @@ fun process(input:real){
    mem filter_attack, filter_decay, filter_sustain, filter_release;
    mem filter_env_amt, filter_cutoff, filter_resonance;
    mem vca_attack, vca_decay, vca_sustain, vca_release;
+   mem pitchBend;
 
    val gate = notes:mono_isGateOn();
 
@@ -172,8 +409,8 @@ fun process(input:real){
    val lfo_val = lfo(lfo_rate,gate)*lfo_amt;
 
    // creates two oscillators
-   val o1 = Sawcore.process(Util.pitchToCv(pitch), 0.0) * 0.5;
-   val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val), 0.0) * 0.5;
+   val o1 = Sawcore.process(Util.pitchToCv(pitch+pitchBend+lfo_val), 0.0) * 0.5;
+   val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val+pitchBend-0.1), 0.0) * 0.5;
    val osc_mix = o1 + o2;
 
    // gets the amplification by using a low-pass on the gate
@@ -182,19 +419,29 @@ fun process(input:real){
    
 
    // ADSR env for filter
+
+
    val gate_real = if gate then 1.0 else 0.0;
    val env_vcf = Adsr.do(gate_real, filter_attack, filter_decay, filter_sustain, filter_release) * 4.0;
    val env_vca = Adsr.do(gate_real, vca_attack, vca_decay, vca_sustain, vca_release) * 4.0;
-   val filter_out = Svf.process(osc_out, filter_cutoff+(env_vcf*filter_env_amt), filter_resonance, 0);
+
+   val filter_frequency = clip(filter_cutoff+(env_vcf*filter_env_amt), 0.0, 1.0);
+   val filter_out = Svf.process(osc_out, filter_frequency, filter_resonance, 0);
 
    val delay_out = delay(filter_out,smooth(time),smooth(feedback));
+   /*
+   val lfo_time_a = Swept.process(gate_real, 1.0, 0.0, 0.01);
+   val lfo_time_b = Swept.process(gate_real, 1.0, 0.0, 0.024);
+   
+   val comb_out_a = combFilter(osc_out, lfo_time_a);
+   val comb_out_b = combFilter(osc_out, clip(lfo_time_b+0.1, 0.0, 1.0));
 
-   val dry = filter_out * (1.0 - wetdry);
-   val wet = delay_out * wetdry;
-   val out = dry + wet;
+   val out = reverb((comb_out_a*0.5 + comb_out_b*0.5)*env_vca)/4.0;
+   */
+   //val out = unit_drum(gate_real, 4.0, 0.01, 0.7, 0.5);
 
    // mute workaround to avoid noise at startup
-   return env_vca * (out)  / 4.0;
+   return ((delay_out*0.5) + filter_out*0.5)  / 4.0;
 }
 
 // Called when a note On is received
@@ -245,31 +492,41 @@ and controlChange(control:int,value:int,channel:int){
    if(control==46) vca_sustain = real(value)/127.0;
    if(control==47) vca_release = real(value)/127.0;
 
+   if(control==2) lfo_amt = (real(value)/127.0);
+   if(control==1) lfo_rate = (real(value)/127.0);
+
+}
+
+and pitchBend(value:int){
+   mem pitchBend;
+   pitchBend = real(value)/8192.0;
 }
 
 // Called on initialization to define initial values
 and default(){
    mem volume = 1.0;
    mem pitch = 45.0;
-   mem detune = 0.1;
+   mem detune = 0.05;
    mem lfo_rate = 0.07;
-   mem lfo_amt = -0.1;
-   mem time = 0.8;
-   mem feedback = 0.6;
-   mem wetdry = 0.4;
+   mem lfo_amt = 0.1;
+   mem time = 0.45;
+   mem feedback = 0.3;
+   mem wetdry = 0.3;
    mem mute = true;
 
    mem filter_attack = 0.0;
    mem filter_decay = 0.2;
-   mem filter_sustain = 0.4;
-   mem filter_release = 0.05;
+   mem filter_sustain = 0.6;
+   mem filter_release = 0.8;
 
-   mem filter_env_amt = 0.5;
-   mem filter_cutoff = 0.5;
+   mem filter_env_amt = 0.8;
+   mem filter_cutoff = 0.2;
    mem filter_resonance = 0.5;
 
    mem vca_attack = 0.0;
    mem vca_decay = 0.4;
-   mem vca_sustain = 0.5;
-   mem vca_release = 0.2;
+   mem vca_sustain = 0.7;
+   mem vca_release = 0.9;
+
+   mem pitchBend = 0.0;
 }
