@@ -4,7 +4,7 @@
 
 Photos courtesy of Paul D. Pape - derwellenreiter for schneidersladen, Berlin, Germany. 
 
-This C++ boilerplate template allows for creating Synthesizers, Effects and other Audio DSP related projects based on the cheap and easily available RP2040 MCU. It targets the "PicoADK" board (link below), which I have created.
+This C++ boilerplate template allows for creating Synthesizers, Effects and other Audio DSP related projects. It targets the "PicoADK" board (link below), which I have created.
 ## Prerequisites
 
 1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
