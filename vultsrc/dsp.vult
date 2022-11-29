@@ -1,3 +1,13 @@
+/*
+   = A simple synthesizer with one LFO and a Delay effect
+  CC30 - Volume
+  CC31 - Detune/Resonance
+  CC32 - LFO rate
+  CC33 - LFO amount (bipolar)
+  CC34 - Delay time
+  CC35 - Delay feedback
+*/
+
 // Used to soften the transitions of controls
 fun smooth(input:real) : real {
    mem x;
@@ -410,7 +420,7 @@ fun process(input:real){
 
    // creates two oscillators
    val o1 = Sawcore.process(Util.pitchToCv(pitch+pitchBend+lfo_val), 0.0) * 0.5;
-   val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val+pitchBend-0.1), 0.0) * 0.5;
+   val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val+pitchBend)-0.1, 0.0) * 0.5;
    val osc_mix = o1 + o2;
 
    // gets the amplification by using a low-pass on the gate
