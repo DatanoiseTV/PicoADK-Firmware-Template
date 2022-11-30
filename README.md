@@ -1,4 +1,4 @@
-# PicoADK FreeRTOS Template (with VultDSP runtime and USB MIDI)
+# PicoADK - Audio Development Kit - FreeRTOS Template (with VultDSP runtime and USB MIDI)
 
 ![PicoADK_Top](https://user-images.githubusercontent.com/6614616/204331473-485c4a37-0c32-4387-92df-22c15a2e22aa.jpg)
 
