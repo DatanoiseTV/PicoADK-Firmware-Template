@@ -11,12 +11,20 @@ This C++ boilerplate template allows for creating Synthesizers, Effects and othe
 
 ## Building 
 ```
-git submodule update --init --recursive
+git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template
+cd picoadk-template
 mkdir build && cd build
 cmake ..
 make
-cp rp2040-vult.uf2 /media/xyz/RP2_BOOT/
 ```
+
+Now you can find a main.uf2 in the build folder, which is your firmware.
+
+## Copying the Firmware to the PicoADK
+
+Plug in the PicoADK USB Type-C while holding the **BOOT** button **or** hold **BOOT** and press the reset button quickly.
+After that, a **RPI-RP2** disk volume will appear. Simply drag and drop the UF2 file to this drive and the PicoADK will
+reboot after a moment, the drive will disappear and your firmware will be running.
 
 ## Development
 
