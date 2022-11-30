@@ -44,7 +44,7 @@ git push origin v1.0.0
 
 # Hardware
 
-The way-to-go hardware option is the [PicoADK](https://github.com/DatanoiseTV/PicoADK-Hardware
+The way-to-go hardware option is the [PicoADK](https://github.com/DatanoiseTV/PicoADK-Hardware)
 
 # Getting RAM and flash usage statistics
 
