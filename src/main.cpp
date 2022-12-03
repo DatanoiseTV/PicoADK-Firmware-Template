@@ -139,6 +139,18 @@ extern "C"
         }
     }
 
+
+    int32_t fix16_to_int32(fix16_t x) {
+        fix16_t out;
+        if(x >= int_to_fix(1))
+            out = int_to_fix(1) - 1;
+        else if(x <= int_to_fix(-1))
+            out = int_to_fix(-1) + 1;
+        else
+            out = x;
+        return out << 15u;
+    }
+
     // This function is called by the audio subsystem when it needs more audio data.
     void i2s_callback_func()
     {
@@ -156,7 +168,8 @@ extern "C"
         {
             // smp should be the output of your processing code.
             // In case of the Vult Example, this is Dsp_process(ctx, 0);
-            int32_t smp = Dsp_process(ctx, 0) << 16u;
+            fix16_t out = Dsp_process(ctx, 0);
+            int32_t smp = fix16_to_int32(out);
             samples[i * 2 + 0] = smp; // LEFT
             samples[i * 2 + 1] = smp; // RIGHT
         }
