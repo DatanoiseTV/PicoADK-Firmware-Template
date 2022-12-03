@@ -8,35 +8,6 @@
   CC35 - Delay feedback
 */
 
-// Used to soften the transitions of controls
-fun smooth(input:real) : real {
-   mem x;
-   x = x+(input-x)*0.005;
-   return x;
-}
-
-fun smooth2(input:real) : real {
-   mem x;
-   x = x+(input-x)*0.0001;
-   return x;
-}
-
-// Returns true every time the input value changes
-fun change(x:real):bool {
-    mem pre_x;
-    val v:bool = pre_x<>x;
-    pre_x = x;
-    return v;
-}
-
-// Returns true if the value changes from 0 to anything
-fun edge(x:bool):bool {
-    mem pre_x;
-    val v:bool = (pre_x<>x) && (pre_x==false);
-    pre_x = x;
-    return v;
-}
-
 // Returns true every 'n' calls
 fun each(n:int) : bool {
    mem count;
@@ -45,14 +16,23 @@ fun each(n:int) : bool {
    return ret;
 }
 
+fun sine_table(x) @[table(min = 0.0, max = 1.0, size = 1024)] {
+   return sin(2.0 * pi() * x);
+}
+
 // Converts the MIDI note to increment rate at a 44100 sample rate
-fun pitchToRate(d) return 8.1758*exp(0.0577623*d)/samplerate();
+fun pitchToRate(d) @[table(min = 0.0, max = 127.0, size = 1024)]
+   return 8.1758*exp(0.0577623*d)/samplerate();
 
 fun phasor(pitch:real,reset:bool){
     mem rate,phase;
-    if(change(pitch))
+    if(Util.change(pitch))
         rate = pitchToRate(pitch);
-    phase = if reset then 0.0 else (phase + rate) % 1.0;
+    phase =
+      if reset then 0.0 
+      else if phase > 1.0 then phase - 1.0
+      else phase;
+
     return phase;
 }
 
@@ -60,10 +40,10 @@ fun phasor(pitch:real,reset:bool){
 fun lfo(f:real,gate:bool) : real {
     mem phase;
     val rate = f * 10.0/samplerate();
-    if(edge(gate)) phase = 0.0;
+    if(Util.edge(gate)) phase = 0.0;
     phase = phase + rate;
     if(phase>1.0) phase = phase-1.0;
-    return sin(phase*2.0*3.141592653589793)-0.5;
+    return sine_table(phase) - 0.5;
 }
 
 // Implements the resonant filter simulation as shown in
@@ -74,8 +54,8 @@ fun phd_osc(pitch:real,detune:real) : real {
    val comp   = 1.0 - phase1;
    val reset  = (pre_phase1 - phase1) > 0.5;
    pre_phase1 = phase1;
-   val phase2 = phasor(pitch+smooth(detune)*32.0,reset);
-   val sine  = sin(2.0*3.14159265359*phase2);
+   val phase2 = phasor(pitch + Util.smooth(detune)*32.0,reset);
+   val sine  = sine_table(phase2);
    return sine*comp;
 }
 
@@ -424,7 +404,7 @@ fun process(input:real){
    val osc_mix = o1 + o2;
 
    // gets the amplification by using a low-pass on the gate
-   val amp = smooth(if gate then 1.0 else 0.0);
+   val amp = Util.smooth(if gate then 1.0 else 0.0);
    val osc_out = osc_mix * amp;
    
 
@@ -438,7 +418,7 @@ fun process(input:real){
    val filter_frequency = clip(filter_cutoff+(env_vcf*filter_env_amt), 0.0, 1.0);
    val filter_out = Svf.process(osc_out, filter_frequency, filter_resonance, 0);
 
-   val delay_out = delay(filter_out,smooth(time),smooth(feedback));
+   val delay_out = delay(filter_out, Util.smooth(time), Util.smooth(feedback));
    /*
    val lfo_time_a = Swept.process(gate_real, 1.0, 0.0, 0.01);
    val lfo_time_b = Swept.process(gate_real, 1.0, 0.0, 0.024);
@@ -451,7 +431,7 @@ fun process(input:real){
    //val out = unit_drum(gate_real, 4.0, 0.01, 0.7, 0.5);
 
    // mute workaround to avoid noise at startup
-   return ((delay_out*0.5) + filter_out*0.5)  / 4.0;
+   return ((delay_out*0.5) + filter_out*0.5);
 }
 
 // Called when a note On is received
@@ -481,29 +461,29 @@ and controlChange(control:int,value:int,channel:int){
 
    // Control 30 defines the volume
    if(control==30) volume = real(value)/127.0;
-   if(control==31) detune = real(value)/127.0;
-   if(control==32) lfo_rate = real(value)/127.0;
-   if(control==33) lfo_amt = 2.0*((real(value)/127.)-0.5);
-   if(control==34) time = real(value)/127.0;
-   if(control==35) feedback = real(value)/127.0;
-   if(control==36) wetdry = real(value)/127.0;
+   else if(control==31) detune = real(value)/127.0;
+   else if(control==32) lfo_rate = real(value)/127.0;
+   else if(control==33) lfo_amt = 2.0*((real(value)/127.)-0.5);
+   else if(control==34) time = real(value)/127.0;
+   else if(control==35) feedback = real(value)/127.0;
+   else if(control==36) wetdry = real(value)/127.0;
 
-   if(control==37) filter_attack = real(value)/127.0;
-   if(control==38) filter_decay = real(value)/127.0;
-   if(control==39) filter_sustain = real(value)/127.0;
-   if(control==40) filter_release = real(value)/127.0;
+   else if(control==37) filter_attack = real(value)/127.0;
+   else if(control==38) filter_decay = real(value)/127.0;
+   else if(control==39) filter_sustain = real(value)/127.0;
+   else if(control==40) filter_release = real(value)/127.0;
 
-   if(control==41) filter_env_amt = real(value)/127.0;
-   if(control==42) filter_cutoff = real(value)/127.0;
-   if(control==43) filter_resonance = real(value)/127.0;
+   else if(control==41) filter_env_amt = real(value)/127.0;
+   else if(control==42) filter_cutoff = real(value)/127.0;
+   else if(control==43) filter_resonance = real(value)/127.0;
 
-   if(control==44) vca_attack = real(value)/127.0;
-   if(control==45) vca_decay = real(value)/127.0;
-   if(control==46) vca_sustain = real(value)/127.0;
-   if(control==47) vca_release = real(value)/127.0;
+   else if(control==44) vca_attack = real(value)/127.0;
+   else if(control==45) vca_decay = real(value)/127.0;
+   else if(control==46) vca_sustain = real(value)/127.0;
+   else if(control==47) vca_release = real(value)/127.0;
 
-   if(control==2) lfo_amt = (real(value)/127.0);
-   if(control==1) lfo_rate = (real(value)/127.0);
+   else if(control==2) lfo_amt = (real(value)/127.0);
+   else if(control==1) lfo_rate = (real(value)/127.0);
 
 }
 
