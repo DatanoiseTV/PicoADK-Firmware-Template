@@ -10,9 +10,10 @@ This C++ boilerplate template allows for creating Synthesizers, Effects and othe
 1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
 
 ## Building 
-```
+```bash
 git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template
 cd picoadk-template
+export PICO_SDK_FETCH_FROM_GIT=1
 mkdir build && cd build
 cmake ..
 make
@@ -37,7 +38,7 @@ The pipeline will trigger a full build on Push or Pull Request.
 
 The pipeline will trigger a new release build on following tagging scheme:
 
-```
+```bash
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 ```
