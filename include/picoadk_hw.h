@@ -2,6 +2,7 @@
 #define __PICOADK_HW_H__
 
 #include <stdio.h>
+#include <cstdlib>
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
 #include "hardware/spi.h"
