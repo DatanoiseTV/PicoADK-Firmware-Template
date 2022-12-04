@@ -114,7 +114,7 @@ extern "C"
             for (int i = 2; i < 6; i++)
             {
                 gpio_put(i, 1);
-                vTaskDelay(pdMS_TO_TICKS(15));
+                vTaskDelay(pdMS_TO_TICKS(100));
                 gpio_put(i, 0);
             }
         }
