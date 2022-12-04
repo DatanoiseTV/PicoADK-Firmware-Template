@@ -13,6 +13,9 @@
 #define USE_DIN_MIDI 1
 #define DEBUG_MIDI 1
 
+// Set to 0 if you want to play notes via USB MIDI
+#define PLAY_RANDOM_NOTES 0
+
 audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
 
@@ -48,18 +51,21 @@ extern "C"
     // MIDI callbacks
     void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
     {
-        if(level > 0){
+        if (level > 0)
+        {
             Dsp_noteOn(ctx, note, level, channel);
             gpio_put(15, 1);
-        #ifdef DEBUG_MIDI
-                printf("note on (ch %d): %d %d\n", channel, note, level);
-        #endif
-        } else {
+#ifdef DEBUG_MIDI
+            printf("note on (ch %d): %d %d\n", channel, note, level);
+#endif
+        }
+        else
+        {
             Dsp_noteOff(ctx, note, channel);
             gpio_put(15, 0);
-        #ifdef DEBUG_MIDI
-                printf("note off (ch %d): %d %d\n", channel, note, level);
-        #endif
+#ifdef DEBUG_MIDI
+            printf("note off (ch %d): %d %d\n", channel, note, level);
+#endif
         }
     }
 
@@ -67,17 +73,17 @@ extern "C"
     {
         Dsp_noteOff(ctx, note, channel);
         gpio_put(15, 0);
-        #ifdef DEBUG_MIDI
-                printf("note off (ch %d): %d %d\n", channel, note, level);
-        #endif
+#ifdef DEBUG_MIDI
+        printf("note off (ch %d): %d %d\n", channel, note, level);
+#endif
     }
 
     void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
     {
         Dsp_controlChange(ctx, cc, value, channel);
-        #ifdef DEBUG_MIDI
-                printf("cc (ch %d): %d %d\n", channel, cc, value);
-        #endif
+#ifdef DEBUG_MIDI
+        printf("cc (ch %d): %d %d\n", channel, cc, value);
+#endif
     }
 
     void usb_midi_task(void *pvParameters)
@@ -96,7 +102,8 @@ extern "C"
     void blinker_task(void *pvParameters)
     {
         // set gpio 2-5 and 15 as outputs
-        for(int i = 2; i < 6; i++) {
+        for (int i = 2; i < 6; i++)
+        {
             gpio_init(i);
             gpio_set_dir(i, GPIO_OUT);
         }
@@ -104,10 +111,50 @@ extern "C"
         while (1)
         {
             // chase leds on gpio 2-5
-            for(int i = 2; i < 6; i++) {
+            for (int i = 2; i < 6; i++)
+            {
                 gpio_put(i, 1);
                 vTaskDelay(pdMS_TO_TICKS(15));
                 gpio_put(i, 0);
+            }
+        }
+    }
+
+    void play_task(void *pvParameters)
+    {
+        while (1)
+        {
+            uint8_t lydianScale[7] = {0, 2, 4, 6, 7, 9, 11};
+            uint8_t noteArray[8];
+            uint8_t randomOctave = rand() % 3;
+            bool restArray[8];
+            uint8_t noteLengthArray[8];
+
+            for (int i = 0; i < 16; i++)
+            {
+                noteArray[i] = (lydianScale[rand() % 7] + 60 - 12) + randomOctave * 12;
+                restArray[i] = rand() % 2;
+                noteLengthArray[i] = 50 + (rand() % 50);
+            }
+
+            uint8_t noteInterval = 100;
+
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 16; j++)
+                {
+                    if (!restArray[j])
+                    {
+                        Dsp_noteOn(ctx, noteArray[j], 127, 0);
+                        vTaskDelay(pdMS_TO_TICKS(noteInterval));
+                        Dsp_noteOff(ctx, noteArray[j], 0);
+                        vTaskDelay(pdMS_TO_TICKS(noteInterval));
+                    }
+                    else
+                    {
+                        vTaskDelay(pdMS_TO_TICKS(noteInterval * 2));
+                    }
+                }
             }
         }
     }
@@ -129,9 +176,12 @@ extern "C"
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        #ifdef PLAY_RANDOM_NOTES
+        xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        #endif
         vTaskStartScheduler();
 
-        // Idle loop. 
+        // Idle loop.
         while (1)
         {
             ;
@@ -139,12 +189,12 @@ extern "C"
         }
     }
 
-
-    int32_t fix16_to_int32(fix16_t x) {
+    int32_t fix16_to_int32(fix16_t x)
+    {
         fix16_t out;
-        if(x >= int_to_fix(1))
+        if (x >= int_to_fix(1))
             out = int_to_fix(1) - 1;
-        else if(x <= int_to_fix(-1))
+        else if (x <= int_to_fix(-1))
             out = int_to_fix(-1) + 1;
         else
             out = x;
@@ -171,7 +221,7 @@ extern "C"
             Dsp_process(ctx);
             fix16_t left_out = Dsp_process_ret_0(ctx);
             fix16_t right_out = Dsp_process_ret_1(ctx);
-            samples[i * 2 + 0] = fix16_to_int32(left_out); // LEFT
+            samples[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT
             samples[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
         }
 
