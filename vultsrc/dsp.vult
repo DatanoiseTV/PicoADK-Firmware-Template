@@ -381,7 +381,7 @@ fun reverb(x) {
 }
 
 // Main processing function
-fun process(input:real){
+fun process() {
    mem volume,detune; // values set in 'controlChange'
    mem pitch;
    mem lfo_rate,lfo_amt;
@@ -431,7 +431,11 @@ fun process(input:real){
    //val out = unit_drum(gate_real, 4.0, 0.01, 0.7, 0.5);
 
    // mute workaround to avoid noise at startup
-   return ((delay_out*0.5) + filter_out*0.5);
+   val mono_output = ((delay_out*0.5) + filter_out*0.5);
+   
+   val left = mono_output;
+   val right = mono_output;
+   return left, right;
 }
 
 // Called when a note On is received

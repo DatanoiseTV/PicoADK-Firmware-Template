@@ -167,11 +167,12 @@ extern "C"
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             // smp should be the output of your processing code.
-            // In case of the Vult Example, this is Dsp_process(ctx, 0);
-            fix16_t out = Dsp_process(ctx, 0);
-            int32_t smp = fix16_to_int32(out);
-            samples[i * 2 + 0] = smp; // LEFT
-            samples[i * 2 + 1] = smp; // RIGHT
+            // In case of the Vult Example, this is Dsp_process(ctx);
+            Dsp_process(ctx);
+            fix16_t left_out = Dsp_process_ret_0(ctx);
+            fix16_t right_out = Dsp_process_ret_1(ctx);
+            samples[i * 2 + 0] = fix16_to_int32(left_out); // LEFT
+            samples[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
         }
 
         dsp_end = to_us_since_boot(get_absolute_time());
