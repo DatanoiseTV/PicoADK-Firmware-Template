@@ -125,10 +125,10 @@ extern "C"
         while (1)
         {
             uint8_t lydianScale[7] = {0, 2, 4, 6, 7, 9, 11};
-            uint8_t noteArray[8];
+            uint8_t noteArray[16];
             uint8_t randomOctave = rand() % 3;
-            bool restArray[8];
-            uint8_t noteLengthArray[8];
+            bool restArray[16];
+            uint8_t noteLengthArray[16];
 
             for (int i = 0; i < 16; i++)
             {
