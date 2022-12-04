@@ -14,7 +14,7 @@
 #define DEBUG_MIDI 1
 
 // Set to 0 if you want to play notes via USB MIDI
-#define PLAY_RANDOM_NOTES 0
+#define PLAY_RANDOM_NOTES 1
 
 audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
@@ -176,9 +176,9 @@ extern "C"
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
-        #ifdef PLAY_RANDOM_NOTES
+#ifdef PLAY_RANDOM_NOTES
         xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
-        #endif
+#endif
         vTaskStartScheduler();
 
         // Idle loop.
@@ -201,6 +201,12 @@ extern "C"
         return out << 15u;
     }
 
+    int rev_log_scale(int x)
+    {
+        // Calculate reverse logarithmic value from linear input
+        return (int)(pow(10, abs(x) / 2048.0) / 10.0 * 2048.0 - 2048.0);
+    }
+
     // This function is called by the audio subsystem when it needs more audio data.
     void i2s_callback_func()
     {
@@ -213,12 +219,18 @@ extern "C"
 
         dsp_start = to_us_since_boot(get_absolute_time());
 
+        // convert 12-bit adc value to 16-bit signed int
+        uint32_t cv0 = adc128_read(0) * 16;
+        uint32_t cv1 = rev_log_scale(adc128_read(1)) * 16;
+        uint32_t cv2 = adc128_read(2) * 16;
+        uint32_t cv3 = adc128_read(3) * 16;
+
         // We are filling the buffer with 32-bit samples (2 channels)
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             // smp should be the output of your processing code.
             // In case of the Vult Example, this is Dsp_process(ctx);
-            Dsp_process(ctx);
+            Dsp_process(ctx, cv0, cv1, cv2, cv3);
             fix16_t left_out = Dsp_process_ret_0(ctx);
             fix16_t right_out = Dsp_process_ret_1(ctx);
             samples[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT

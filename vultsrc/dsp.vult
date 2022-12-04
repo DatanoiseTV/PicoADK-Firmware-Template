@@ -1,12 +1,8 @@
-/*
-   = A simple synthesizer with one LFO and a Delay effect
-  CC30 - Volume
-  CC31 - Detune/Resonance
-  CC32 - LFO rate
-  CC33 - LFO amount (bipolar)
-  CC34 - Delay time
-  CC35 - Delay feedback
-*/
+fun smooth_cv(input:real) : real {
+   mem x;
+   x = x+(input-x)*0.001;
+   return x;
+}
 
 // Returns true every 'n' calls
 fun each(n:int) : bool {
@@ -381,7 +377,7 @@ fun reverb(x) {
 }
 
 // Main processing function
-fun process() {
+fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    mem volume,detune; // values set in 'controlChange'
    mem pitch;
    mem lfo_rate,lfo_amt;
@@ -399,40 +395,21 @@ fun process() {
    val lfo_val = lfo(lfo_rate,gate)*lfo_amt;
 
    // creates two oscillators
-   val o1 = Sawcore.process(Util.pitchToCv(pitch+pitchBend+lfo_val), 0.0) * 0.5;
+   val o1 = Sawcore.process(Util.pitchToCv( pitch+pitchBend+lfo_val), 0.0) * 0.5;
    val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val+pitchBend)-0.1, 0.0) * 0.5;
    val osc_mix = o1 + o2;
-
-   // gets the amplification by using a low-pass on the gate
-   val amp = Util.smooth(if gate then 1.0 else 0.0);
-   val osc_out = osc_mix * amp;
-   
-
-   // ADSR env for filter
-
 
    val gate_real = if gate then 1.0 else 0.0;
    val env_vcf = Adsr.do(gate_real, filter_attack, filter_decay, filter_sustain, filter_release) * 4.0;
    val env_vca = Adsr.do(gate_real, vca_attack, vca_decay, vca_sustain, vca_release) * 4.0;
 
-   val filter_frequency = clip(filter_cutoff+(env_vcf*filter_env_amt), 0.0, 1.0);
-   val filter_out = Svf.process(osc_out, filter_frequency, filter_resonance, 0);
-
-   val delay_out = delay(filter_out, Util.smooth(time), Util.smooth(feedback));
-   /*
-   val lfo_time_a = Swept.process(gate_real, 1.0, 0.0, 0.01);
-   val lfo_time_b = Swept.process(gate_real, 1.0, 0.0, 0.024);
+   val osc_out = Fold.process(osc_mix, smooth_cv(cv2));
    
-   val comb_out_a = combFilter(osc_out, lfo_time_a);
-   val comb_out_b = combFilter(osc_out, clip(lfo_time_b+0.1, 0.0, 1.0));
+   val filter_frequency = clip(smooth_cv(cv1)+(env_vcf*smooth_cv(cv3)), 0.0, 1.0);
+   val filter_out_pre = Svf.process(osc_out, filter_frequency, smooth_cv(cv0)*5.5, 0);
+   val filter_out = Saturate.process(filter_out_pre);   
 
-   val out = reverb((comb_out_a*0.5 + comb_out_b*0.5)*env_vca)/4.0;
-   */
-   //val out = unit_drum(gate_real, 4.0, 0.01, 0.7, 0.5);
-
-   // mute workaround to avoid noise at startup
-   val mono_output = ((delay_out*0.5) + filter_out*0.5);
-   
+   val mono_output = filter_out * env_vca;
    val left = mono_output;
    val right = mono_output;
    return left, right;
