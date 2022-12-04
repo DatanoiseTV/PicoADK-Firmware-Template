@@ -16,5 +16,6 @@
 #include "bsp/board.h"
 
 void picoadk_init();
+int adc128_read(uint8_t chan);
 
 #endif // __PICOADK_HW_H__
