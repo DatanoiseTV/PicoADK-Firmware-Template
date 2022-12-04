@@ -126,13 +126,15 @@ extern "C"
         {
             uint8_t lydianScale[7] = {0, 2, 4, 6, 7, 9, 11};
             uint8_t noteArray[16];
-            uint8_t randomOctave = rand() % 3;
+            uint8_t velocityArray[16];
             bool restArray[16];
             uint8_t noteLengthArray[16];
 
             for (int i = 0; i < 16; i++)
             {
+                uint8_t randomOctave = rand() % 3;
                 noteArray[i] = (lydianScale[rand() % 7] + 60 - 12) + randomOctave * 12;
+                velocityArray[i] = 64 + rand() % 63;
                 restArray[i] = rand() % 2;
                 noteLengthArray[i] = 50 + (rand() % 50);
             }
@@ -145,7 +147,7 @@ extern "C"
                 {
                     if (!restArray[j])
                     {
-                        Dsp_noteOn(ctx, noteArray[j], 127, 0);
+                        Dsp_noteOn(ctx, noteArray[j], velocityArray[j], 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));
                         Dsp_noteOff(ctx, noteArray[j], 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));

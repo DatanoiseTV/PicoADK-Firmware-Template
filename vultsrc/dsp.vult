@@ -388,6 +388,7 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    mem filter_env_amt, filter_cutoff, filter_resonance;
    mem vca_attack, vca_decay, vca_sustain, vca_release;
    mem pitchBend;
+   mem velo;
 
    val gate = notes:mono_isGateOn();
 
@@ -395,7 +396,7 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    val lfo_val = lfo(lfo_rate,gate)*lfo_amt;
 
    // creates two oscillators
-   val o1 = Sawcore.process(Util.pitchToCv( pitch+pitchBend+lfo_val), 0.0) * 0.5;
+   val o1 = Sawcore.process(Util.pitchToCv(pitch+pitchBend+lfo_val), 0.0) * 0.5;
    val o2 = Sawcore.process(Util.pitchToCv(pitch+detune+lfo_val+pitchBend)-0.1, 0.0) * 0.5;
    val osc_mix = o1 + o2;
 
@@ -407,9 +408,11 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    
    val filter_frequency = clip(smooth_cv(cv1)+(env_vcf*smooth_cv(cv3)), 0.0, 1.0);
    val filter_out_pre = Svf.process(osc_out, filter_frequency, smooth_cv(cv0)*5.5, 0);
+
+   //val filter_out_pre = Ladder.process_heun(osc_out, filter_frequency, smooth_cv(cv0));
    val filter_out = Saturate.process(filter_out_pre);   
 
-   val mono_output = filter_out * env_vca;
+   val mono_output = filter_out * env_vca * velo;
    val left = mono_output;
    val right = mono_output;
    return left, right;
@@ -422,6 +425,7 @@ and noteOn(note:int,velocity:int,channel:int){
    mute = false;
 
    mem pitch = real(notes:mono_noteOn(note));
+   mem velo = real(velocity)/127.0;
 }
 
 // Called when a note Off is received
@@ -477,7 +481,7 @@ and pitchBend(value:int){
 and default(){
    mem volume = 1.0;
    mem pitch = 45.0;
-   mem detune = 0.05;
+   mem detune = 0.1;
    mem lfo_rate = 0.07;
    mem lfo_amt = 0.1;
    mem time = 0.45;
