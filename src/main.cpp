@@ -14,7 +14,7 @@
 #define DEBUG_MIDI 1
 
 // Set to 0 if you want to play notes via USB MIDI
-#define PLAY_RANDOM_NOTES 1
+#define PLAY_RANDOM_NOTES 0
 
 audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
@@ -178,7 +178,7 @@ extern "C"
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
-#ifdef PLAY_RANDOM_NOTES
+#if PLAY_RANDOM_NOTES
         xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
 #endif
         vTaskStartScheduler();
