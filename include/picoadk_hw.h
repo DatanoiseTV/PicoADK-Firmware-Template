@@ -13,6 +13,7 @@
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
 #include "hardware/vreg.h"
+#include "hardware/structs/rosc.h"
 #include "bsp/board.h"
 
 void picoadk_init();
