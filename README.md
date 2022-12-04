@@ -9,7 +9,7 @@ This C++ boilerplate template allows for creating Synthesizers, Effects and othe
 
 1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
 
-## Building 
+## Compiling the firmware 
 ```bash
 git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template
 cd picoadk-template
@@ -19,6 +19,10 @@ cmake ..
 make
 ```
 Now you can find a main.uf2 in the build folder, which is your firmware.
+
+### Screencast
+
+[![asciicast](https://asciinema.org/a/wlsquaWjHYd0cjhA0S8T4ozG1.svg)](https://asciinema.org/a/wlsquaWjHYd0cjhA0S8T4ozG1)
 
 ## Copying the Firmware to the PicoADK
 
