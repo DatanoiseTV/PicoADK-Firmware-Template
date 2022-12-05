@@ -1,10 +1,10 @@
-# PicoADK - Audio Development Kit - FreeRTOS Template (with VultDSP runtime and USB MIDI)
+# PicoADK - Audio Development Kit Firmware
 
 ![PicoADK_Top](https://user-images.githubusercontent.com/6614616/204331473-485c4a37-0c32-4387-92df-22c15a2e22aa.jpg)
 
 Photos courtesy of Paul D. Pape - derwellenreiter for schneidersladen, Berlin, Germany. 
 
-This C++ boilerplate template allows for creating Synthesizers, Effects and other Audio DSP related projects. It targets the "PicoADK" board (link below), which I have created.
+This boilerplate template allows you to create standalone synthesizers, noise boxes, sample players, ..
 ## Prerequisites
 
 1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
