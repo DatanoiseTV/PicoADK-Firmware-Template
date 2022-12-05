@@ -409,7 +409,7 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    val filter_frequency = clip(smooth_cv(cv1)+(env_vcf*smooth_cv(cv3)), 0.0, 1.0);
    val filter_out_pre = Svf.process(osc_out, filter_frequency, smooth_cv(cv0)*5.5, 0);
 
-   //val filter_out_pre = Ladder.process_heun(osc_out, filter_frequency, smooth_cv(cv0));
+   //val filter_out_pre = Filter.ladder(osc_out, filter_frequency, smooth_cv(cv0));
    val filter_out = Saturate.process(filter_out_pre);   
 
    val mono_output = filter_out * env_vca * velo;

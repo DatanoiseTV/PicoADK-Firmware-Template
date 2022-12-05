@@ -1,0 +1,62 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2022 Leonardo Laguna Ruiz
+-----
+Simple Ladder Filter
+
+This is a simplified implementation of the ladder filter made to be
+somewhat efficient and decent sounding. It works fine with fixed-point
+arithmetics and only works at 44.1kHz of samplig rate.
+
+*/
+
+
+fun tune(cut) @[table(min = 0.0, max = 1.0, size = 128)] {
+   val f = Util.cvTokHz(clip(cut, 0.0, 0.87));
+   f = clip(f, 0.0, 20.0);
+   val fh = (2.0 * pi()) * f / (2.0 * 44.1);
+   return fh;
+}
+
+fun clipper(x) {
+    // Using this naive clipping function because it seems like any other code does not work
+    // well with the RP2040. Maybe it's using too many resources.
+    return clip(x, -1.0, 1.0);
+}
+
+
+fun heun(input, fh, res) {
+   mem p0, p1, p2, p3;
+
+   val wt0 = clipper(input - 4.0 * res * p3);
+   val dpt0 = (wt0 - p0) * fh;
+   val dpt1 = (p0 - p1) * fh;
+   val dpt2 = (p1 - p2) * fh;
+   val dpt3 = (p2 - p3) * fh;
+
+   val pt0 = p0 + dpt0;
+   val pt1 = p1 + dpt1;
+   val pt2 = p2 + dpt2;
+   val pt3 = p3 + dpt3;
+
+   val w0 = clipper(input - 4.0 * res * pt3);
+   val dp0 = (w0 - pt0) * fh;
+   val dp1 = (pt0 - pt1) * fh;
+   val dp2 = (pt1 - pt2) * fh;
+   val dp3 = (pt2 - pt3) * fh;
+
+   p0 = p0 + (dp0 + dpt0) / 2.0;
+   p1 = p1 + (dp1 + dpt1) / 2.0;
+   p2 = p2 + (dp2 + dpt2) / 2.0;
+   p3 = p3 + (dp3 + dpt3) / 2.0;
+
+   return p3;
+}
+
+fun ladder(input:real, cut:real, res:real) {
+    val fh = tune(Util.smooth(cut));
+    _ = h:heun(input, fh, res);
+    val out = h:heun(input, fh, res);
+    return out;
+}
