@@ -5,6 +5,13 @@
 Photos courtesy of Paul D. Pape - derwellenreiter for schneidersladen, Berlin, Germany. 
 
 This boilerplate template allows you to create standalone synthesizers, noise boxes, sample players, ..
+
+## Repository structure
+* C code is located in the src folder and contains all the low-level funtionality for the firmware incl. USB MIDI handling and dealing with the Audio DAC.
+* Includes for the C code are located in the include folder.
+* The Vult DSP code is located in the vultsrc folder.
+* The includes for Vult are located in lib/vult/examples. These provide some oscillator, filter and envelope implementation along others.
+
 ## Prerequisites
 
 1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
