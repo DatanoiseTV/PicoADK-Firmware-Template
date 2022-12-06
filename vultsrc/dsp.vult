@@ -1,3 +1,8 @@
+/*
+CC Mapping see lower part of the code.
+Reacts to 4 potentiometers on ADC0-ADC4 inputs (bottom left 4 pins of the board.
+*/
+
 fun smooth_cv(input:real) : real {
    mem x;
    x = x+(input-x)*0.001;
