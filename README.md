@@ -27,10 +27,6 @@ make
 ```
 Now you can find a main.uf2 in the build folder, which is your firmware.
 
-### Screencast
-
-[![asciicast](https://asciinema.org/a/wlsquaWjHYd0cjhA0S8T4ozG1.svg)](https://asciinema.org/a/wlsquaWjHYd0cjhA0S8T4ozG1)
-
 ## Copying the Firmware to the PicoADK
 
 Plug in the PicoADK USB Type-C while holding the **BOOT** button **or** hold **BOOT** and press the reset button quickly.
