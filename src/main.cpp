@@ -5,16 +5,24 @@
 #include "audio_subsystem.h"
 #include "vult.h"
 #include "picoadk_hw.h"
+#include "nop.pio.h"
+
+#include "luaInterface.h"
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
 
 #include "FreeRTOS.h"
 #include <task.h>
 #include <queue.h>
+#include <timers.h>
+#include <semphr.h>
 
 #define USE_DIN_MIDI 1
 #define DEBUG_MIDI 1
 
 // Set to 0 if you want to play notes via USB MIDI
-#define PLAY_RANDOM_NOTES 0
+#define PLAY_RANDOM_NOTES 1
 
 audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
@@ -132,8 +140,8 @@ extern "C"
 
             for (int i = 0; i < 16; i++)
             {
-                uint8_t randomOctave = rand() % 3;
-                noteArray[i] = (lydianScale[rand() % 7] + 60 - 12) + randomOctave * 12;
+                uint8_t randomOctave = rand() % 2;
+                noteArray[i] = (lydianScale[rand() % 7] + 60 - 24) + randomOctave * 12;
                 velocityArray[i] = 64 + rand() % 63;
                 restArray[i] = rand() % 2;
                 noteLengthArray[i] = 50 + (rand() % 50);
@@ -147,9 +155,9 @@ extern "C"
                 {
                     if (!restArray[j])
                     {
-                        Dsp_noteOn(ctx, noteArray[j], velocityArray[j], 0);
+                        note_on_callback(noteArray[j], velocityArray[j], 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));
-                        Dsp_noteOff(ctx, noteArray[j], 0);
+                        note_off_callback(noteArray[j], 0, 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));
                     }
                     else
@@ -161,10 +169,58 @@ extern "C"
         }
     }
 
+    QueueHandle_t g_scriptSemaphore = NULL;
+
+    static void luaTask(void *pvParameters)
+    {
+        (void)pvParameters;
+
+        lua_State *L = luaL_newstate(); /* create state */
+        if (L == NULL)
+        {
+            printf("cannot create state: not enough memory\n");
+        }
+        else
+        {
+            luaL_openlibs(L); /* open standard libraries */
+
+
+            lua_gc(L, LUA_GCSTOP, 0); // stop the automatic garbage collection
+
+            vTaskDelay(10);
+
+            while (1)
+            {
+
+                uint32_t start = time_us_32();
+                luaL_dostring(L, "print(\"Hello World from LUA!\")");
+                uint32_t end = time_us_32();
+                printf("lua took %d uS\n", end - start);
+                
+                vTaskDelay(1000);
+  
+                
+
+                lua_gc(L, LUA_GCCOLLECT, 0); // collect garbage
+
+                lua_writeline();
+
+                lua_writestringWithoutsize("\n****************************************************************************\n");
+            }
+
+            // lua_close(L);
+        }
+    }
+
     int main(void)
     {
         // initialize the hardware
         picoadk_init();
+
+        PIO pio = pio0;
+        uint offset = pio_add_program(pio, &dummy_program);
+        dummy_program_init(pio, 0, offset);
+        pio_sm_set_enabled(pio, 0, true);
 
         // Initialize Vult DSP context.
         Dsp_process_init(ctx);
@@ -176,8 +232,11 @@ extern "C"
 
         // Create FreeRTOS Tasks for USB MIDI and printing statistics
         xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        //xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+
+        g_scriptSemaphore = xSemaphoreCreateMutex();
+        xTaskCreate(luaTask, "LUA", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
 #if PLAY_RANDOM_NOTES
         xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
 #endif

@@ -1,0 +1,34 @@
+
+.program dummy
+
+.wrap_target
+    nop
+.wrap
+
+% c-sdk {
+
+static inline void dummy_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config sm_config = dummy_program_get_default_config(offset);
+
+    //sm_config_set_out_pins(&sm_config, data_pin, 1);
+    //sm_config_set_sideset_pins(&sm_config, clock_pin_base);
+    //sm_config_set_out_shift(&sm_config, false, true, 32);
+    //sm_config_set_fifo_join(&sm_config, PIO_FIFO_JOIN_TX);
+
+    pio_sm_init(pio, sm, offset, &sm_config);
+
+    //uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    //pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    //pio_sm_set_pins(pio, sm, 0); // clear pins
+
+    // set resolution to ISR (use as config value)
+    //pio_sm_set_enabled(pio, sm, false);
+    //pio_sm_put_blocking(pio, sm, res_bits - 2); // res_bits should be 32, 16 or 8
+    //pio_sm_exec(pio, sm, pio_encode_pull(false, false));
+    //pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+    //pio_sm_set_enabled(pio, sm, true);
+
+    //pio_sm_exec(pio, sm, pio_encode_jmp(offset + audio_i2s_offset_entry_point));
+}
+
+%}

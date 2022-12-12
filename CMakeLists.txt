@@ -46,10 +46,13 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/lib/emblua/lua ${CMAKE_CURRENT_BINARY_DIR} "." )
 
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/parson)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/littlefs-lib lib/littlefs-lib)
+
 
 # Generate Vult C++ code from Vult Code every time
 set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/vult/examples")
@@ -70,6 +73,8 @@ add_custom_command(
         COMMENT "Transcompiling Vult DSP Code to C++."
 )
 
+file(GLOB emblubafiles "${CMAKE_CURRENT_LIST_DIR}/lib/emblua/lua/*.c")
+file(GLOB emblubafiles_helper "${CMAKE_CURRENT_LIST_DIR}/lib/emblua/lua/helper/*.c")
 
 add_executable(main
     vultsrc/dsp.vult
@@ -78,7 +83,11 @@ add_executable(main
     src/picoadk_hw.cpp
     src/vultin.cpp
     src/midi_input_usb.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
+    src/luaInterface.c
+    ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
+    ${emblubafiles}
+    ${emblubafiles_helper}
+    )
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
@@ -109,6 +118,7 @@ target_link_libraries(main
 	Audio
         Oled
         FreeRTOS
+        littlefs-lib
         )
 
 
@@ -122,6 +132,12 @@ target_link_options(main PRIVATE
 )
 
 add_compile_options("-Wall" "-Wredundant-decls")
+
+file(GLOB files "${CMAKE_CURRENT_LIST_DIR}/piosrc/*.pio")
+foreach(file ${files})
+    message ("Adding ${file}")
+    pico_generate_pio_header(main ${file})
+endforeach()
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)

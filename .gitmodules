@@ -4,3 +4,12 @@
 [submodule "lib/vult"]
 	path = lib/vult
 	url = https://github.com/vult-dsp/vult.git
+[submodule "lib/emblua"]
+	path = lib/emblua
+	url = https://github.com/szieke/embLua.git
+[submodule "lib/littlefs-lib"]
+	path = lib/littlefs-lib
+	url = https://github.com/rppicomidi/littlefs-lib.git
+[submodule "lib/parson"]
+	path = lib/parson
+	url = https://github.com/kgabis/parson.git
