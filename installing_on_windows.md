@@ -19,13 +19,13 @@
 1. Wait for download to complete
 1. Type ```sudo npm install vult -g``` and press Enter
 1. Type your password and press Enter when/if prompted
-2. Type ```cd /``` and press Enter
-3. Type ```cd mnt/c``` and press Enter
-4. You are now in your computer's C drive. Use 'cd filepath', replacing the word filepath with the actual path to your 'picoadk-template' folder. For example: ```cd users/johnsmith/documents/picoadk-template```
-5. Type ```git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template``` and press Enter
-6. Type ```cd picoadk-template``` and press Enter
-7. Type ```export PICO_SDK_FETCH_FROM_GIT=1``` and press Enter
-8. Type ```mkdir build && cd build``` and press Enter
-9. Type ```sudo cmake ..``` and press Enter
-10. Wait while it downloads, it may take a long time
-11. Type ```make``` and press Enter
+1. Type ```git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template``` and press Enter
+1. Type ```cd /``` and press Enter
+1. Type ```cd mnt/c``` and press Enter
+1. You are now in your computer's C drive. Use 'cd filepath', replacing the word filepath with the actual path to your 'picoadk-template' folder. For example: ```cd users/johnsmith/documents/picoadk-template```
+1. Type ```cd picoadk-template``` and press Enter
+1. Type ```export PICO_SDK_FETCH_FROM_GIT=1``` and press Enter
+1. Type ```mkdir build && cd build``` and press Enter
+1. Type ```sudo cmake ..``` and press Enter
+1. Wait while it downloads, it may take a long time
+1. Type ```make``` and press Enter
