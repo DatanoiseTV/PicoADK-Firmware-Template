@@ -29,7 +29,7 @@
 1. Type ```sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential``` and press Enter
 1. Type ```y``` and press Enter when/if prompted
 1. Wait for download to complete
-1. Type ```sudo cmake ..``` and press Enter
+1. Type ```cmake ..``` and press Enter
 1. Wait while it downloads, it may take a long time
 1. Type ```make``` and press Enter
 1. Wait for build to complete. This may take a while
