@@ -15,7 +15,7 @@
 1. Close all Powershell and Ubuntu windows
 1. Press the Windows key and type 'Ubuntu', then click 'Ubuntu'
 1. Type ```sudo apt install npm``` and press Enter
-1. Type ```y``` and press Enter when prompted
+1. Type ```y``` and press Enter when/if prompted
 1. Wait for download to complete
 1. Type ```sudo npm install vult -g``` and press Enter
 1. Type your password and press Enter when/if prompted
@@ -26,6 +26,9 @@
 1. Type ```cd picoadk-template``` and press Enter
 1. Type ```export PICO_SDK_FETCH_FROM_GIT=1``` and press Enter
 1. Type ```mkdir build && cd build``` and press Enter
+1. Type ```sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential``` and press Enter
+1. Type ```y``` and press Enter when/if prompted
+1. Wait for download to complete
 1. Type ```sudo cmake ..``` and press Enter
 1. Wait while it downloads, it may take a long time
 1. Type ```make``` and press Enter
