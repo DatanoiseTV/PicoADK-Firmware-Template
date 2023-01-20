@@ -32,3 +32,4 @@
 1. Type ```sudo cmake ..``` and press Enter
 1. Wait while it downloads, it may take a long time
 1. Type ```make``` and press Enter
+1. Wait for build to complete. This may take a while
