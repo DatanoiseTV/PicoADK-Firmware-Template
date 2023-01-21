@@ -20,8 +20,7 @@ jobs:
             name: "Alpine Latest / arm-none-eabi-gcc",
             artifact: "firmware.uf2",
             artifact_files: "main.*",
-            os: "alpine-latest",
-            cc: "gcc", cxx: "g++"
+            os: "alpine-latest"
           }
 
     steps:
@@ -37,9 +36,6 @@ jobs:
       env:
         PICO_SDK_FETCH_FROM_GIT: true
       run: |
-        set(ENV{CC} ${{ matrix.config.cc }})
-        set(ENV{CXX} ${{ matrix.config.cxx }})
-
         if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
           execute_process(
             COMMAND "${{ matrix.config.environment_script }}" && set
