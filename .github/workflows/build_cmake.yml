@@ -26,6 +26,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Workaround dubious ownership
+      run: git config --global --add safe.directory '*'
 
     - name: Checkout submodules
       run: git submodule update --init --recursive
