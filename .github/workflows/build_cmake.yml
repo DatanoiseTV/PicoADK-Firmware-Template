@@ -11,7 +11,7 @@ jobs:
   build:
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-latest
-    container: datanoisetv/picoadk-dev-environment
+    container: datanoisetv/picoadk-dev-environment:v1
     strategy:
       fail-fast: false
       matrix:
