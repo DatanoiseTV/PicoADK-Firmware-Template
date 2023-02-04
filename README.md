@@ -20,7 +20,8 @@ wavefolding, envelope amount, filter frequency and resonance.
 
 ## Prerequisites
 
-1. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
+1. Install the Pico-SDK. You can find a guide at https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+2. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
 
 ## Compiling the firmware 
 ```bash
