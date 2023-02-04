@@ -6,6 +6,12 @@ Photos courtesy of Paul D. Pape - derwellenreiter for schneidersladen, Berlin, G
 
 This boilerplate template allows you to create standalone synthesizers, noise boxes, sample players, ..
 
+## Template example code notes
+
+The example code is a simple monophonic synthesizer which can be controlled via USB MIDI or can play a
+randomly generated melody. It requires you to solder 4 Potentiometers to the ADC0-ADC3 pins, which control
+wavefolding, envelope amount, filter frequency and resonance.
+
 ## Repository structure
 * C code is located in the src folder and contains all the low-level funtionality for the firmware incl. USB MIDI handling and dealing with the Audio DAC.
 * Includes for the C code are located in the include folder.
