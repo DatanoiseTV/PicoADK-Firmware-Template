@@ -16,6 +16,7 @@
 #include "hardware/vreg.h"
 #include "hardware/structs/rosc.h"
 #include "bsp/board.h"
+#include "helper.h"
 
 void picoadk_init();
 int adc128_read(uint8_t chan);

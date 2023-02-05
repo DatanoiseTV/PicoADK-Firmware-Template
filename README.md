@@ -22,6 +22,7 @@ wavefolding, envelope amount, filter frequency and resonance.
 
 1. Install the Pico-SDK. You can find a guide at https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
 2. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
+3. (Optional) Install Ninja - apt install ninja
 
 ## Compiling the firmware 
 ```bash
@@ -29,8 +30,8 @@ git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template p
 cd picoadk-template
 export PICO_SDK_FETCH_FROM_GIT=1
 mkdir build && cd build
-cmake ..
-make
+cmake .. (optionally add -GNinja)
+make (or ninja when you have used -GNinja)
 ```
 Now you can find a main.uf2 in the build folder, which is your firmware.
 

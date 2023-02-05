@@ -14,7 +14,7 @@
 #define DEBUG_MIDI 1
 
 // Set to 0 if you want to play notes via USB MIDI
-#define PLAY_RANDOM_NOTES 0
+#define PLAY_RANDOM_NOTES 1
 
 audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
@@ -86,6 +86,7 @@ extern "C"
 #endif
     }
 
+    // This task processes the USB MIDI input
     void usb_midi_task(void *pvParameters)
     {
         usbmidi.setCCCallback(cc_callback);
@@ -99,6 +100,7 @@ extern "C"
         }
     }
 
+    // This task blinks the LEDs on GPIO 2-5
     void blinker_task(void *pvParameters)
     {
         // set gpio 2-5 and 15 as outputs
@@ -120,6 +122,9 @@ extern "C"
         }
     }
 
+
+    // This tasks generates random notes and plays them.
+    // It is only used if PLAY_RANDOM_NOTES is set to 1.
     void play_task(void *pvParameters)
     {
         while (1)
@@ -181,6 +186,8 @@ extern "C"
 #if PLAY_RANDOM_NOTES
         xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
 #endif
+
+        // Start the scheduler.
         vTaskStartScheduler();
 
         // Idle loop.
@@ -191,26 +198,10 @@ extern "C"
         }
     }
 
-    int32_t fix16_to_int32(fix16_t x)
-    {
-        fix16_t out;
-        if (x >= int_to_fix(1))
-            out = int_to_fix(1) - 1;
-        else if (x <= int_to_fix(-1))
-            out = int_to_fix(-1) + 1;
-        else
-            out = x;
-        return out << 15u;
-    }
-
-    int rev_log_scale(int x)
-    {
-        // Calculate reverse logarithmic value from linear input
-        return (int)(pow(10, abs(x) / 2048.0) / 10.0 * 2048.0 - 2048.0);
-    }
-
-    // This function is called by the audio subsystem when it needs more audio data.
-    void i2s_callback_func()
+    // This fis the I2S callback function. It is called when the I2S subsystem
+    // needs more audio data. It is called at a fixed rate of 48kHz.
+    // The audio data is stored in the audio_buffer_t struct.
+    void __not_in_flash_func(i2s_callback_func())
     {
         audio_buffer_t *buffer = take_audio_buffer(ap, false);
         if (buffer == NULL)
@@ -222,6 +213,7 @@ extern "C"
         dsp_start = to_us_since_boot(get_absolute_time());
 
         // convert 12-bit adc value to 16-bit signed int
+        // todo: use vult external function to read adcs instead
         uint32_t cv0 = adc128_read(0) * 16;
         uint32_t cv1 = rev_log_scale(adc128_read(1)) * 16;
         uint32_t cv2 = adc128_read(2) * 16;

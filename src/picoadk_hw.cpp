@@ -2,11 +2,11 @@
 
 void picoadk_init()
 {
-        // Overclock the CPU to 226 MHz.
-        // We choose 226 MHz, because it works the best for the audio subsystem.
+        // Overclock the CPU to 402 MHz.
+
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(226000, true);
+        set_sys_clock_khz(402000, true);
 
         // Initialize TinyUSB
         board_init();

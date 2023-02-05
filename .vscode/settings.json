@@ -17,5 +17,7 @@
         }
     },
     "cmake.buildBeforeRun": true,
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "nrf-connect.topdir": "/home/syso/dev/ztry",
+    "nrf-connect.toolchain.path": "PATH"
 }
