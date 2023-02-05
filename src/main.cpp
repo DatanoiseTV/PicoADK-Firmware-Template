@@ -180,11 +180,11 @@ extern "C"
         ap = init_audio();
 
         // Create FreeRTOS Tasks for USB MIDI and printing statistics
-        xTaskCreate(usb_midi_task, "USBMIDI", 8192, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(print_task, "TASKLIST", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
-        xTaskCreate(blinker_task, "BLINKER", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(usb_midi_task, "USBMIDI", 4096, NULL, configMAX_PRIORITIES, NULL);
+        xTaskCreate(print_task, "TASKLIST", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(blinker_task, "BLINKER", 128, NULL, configMAX_PRIORITIES - 1, NULL);
 #if PLAY_RANDOM_NOTES
-        xTaskCreate(play_task, "PLAY", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(play_task, "PLAY", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
 #endif
 
         // Start the scheduler.
