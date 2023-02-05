@@ -10,8 +10,8 @@
 #include <task.h>
 #include <queue.h>
 
-#define USE_DIN_MIDI 1
-#define DEBUG_MIDI 1
+#define USE_DIN_MIDI 0
+#define DEBUG_MIDI 0
 
 // Set to 0 if you want to play notes via USB MIDI
 #define PLAY_RANDOM_NOTES 1
@@ -55,7 +55,7 @@ extern "C"
         {
             Dsp_noteOn(ctx, note, level, channel);
             gpio_put(15, 1);
-#ifdef DEBUG_MIDI
+#if DEBUG_MIDI
             printf("note on (ch %d): %d %d\n", channel, note, level);
 #endif
         }
@@ -63,7 +63,7 @@ extern "C"
         {
             Dsp_noteOff(ctx, note, channel);
             gpio_put(15, 0);
-#ifdef DEBUG_MIDI
+#if DEBUG_MIDI
             printf("note off (ch %d): %d %d\n", channel, note, level);
 #endif
         }
@@ -73,7 +73,7 @@ extern "C"
     {
         Dsp_noteOff(ctx, note, channel);
         gpio_put(15, 0);
-#ifdef DEBUG_MIDI
+#if DEBUG_MIDI
         printf("note off (ch %d): %d %d\n", channel, note, level);
 #endif
     }
@@ -81,7 +81,7 @@ extern "C"
     void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
     {
         Dsp_controlChange(ctx, cc, value, channel);
-#ifdef DEBUG_MIDI
+#if DEBUG_MIDI
         printf("cc (ch %d): %d %d\n", channel, cc, value);
 #endif
     }
@@ -152,9 +152,9 @@ extern "C"
                 {
                     if (!restArray[j])
                     {
-                        Dsp_noteOn(ctx, noteArray[j], velocityArray[j], 0);
+                        note_on_callback(noteArray[j], velocityArray[j], 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));
-                        Dsp_noteOff(ctx, noteArray[j], 0);
+                        note_off_callback(noteArray[j], velocityArray[j], 0);
                         vTaskDelay(pdMS_TO_TICKS(noteInterval));
                     }
                     else
