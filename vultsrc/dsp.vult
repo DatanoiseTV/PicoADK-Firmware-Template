@@ -47,65 +47,6 @@ fun lfo(f:real,gate:bool) : real {
     return sine_table(phase) - 0.5;
 }
 
-// Implements the resonant filter simulation as shown in
-// http://en.wikipedia.org/wiki/Phase_distortion_synthesis
-fun phd_osc(pitch:real,detune:real) : real {
-   mem pre_phase1; // used to detect when the phase wrapps from 1 to 0
-   val phase1 = phasor(pitch,false);
-   val comp   = 1.0 - phase1;
-   val reset  = (pre_phase1 - phase1) > 0.5;
-   pre_phase1 = phase1;
-   val phase2 = phasor(pitch + Util.smooth(detune)*32.0,reset);
-   val sine  = sine_table(phase2);
-   return sine*comp;
-}
-
-// Simple delay.
-fun delay(x:real, time:real, feedback:real) : real {
-   mem buffer : array(real,32000);
-   mem write_pos;
-   // Constraints the parameter values
-   time     = clip(time,0.0,1.0);
-   feedback = clip(feedback,0.0,1.0);
-   // Gets the position in the buffer to read
-   val index_r  = real(size(buffer)) * time;
-   val index_i  = int(floor(index_r));
-   val delta    = write_pos - index_i;
-   val read_pos = if delta < 0 then size(buffer)+delta else delta;
-   // Gets the decimal part of the position
-   val decimal  = index_r - real(index_i);
-   // Reads the values in the buffer
-   val x1 = get(buffer,read_pos);
-   val x2 = get(buffer,(read_pos+1) % size(buffer));
-   // Interpolates the value
-   val ret = (x2-x1)*decimal + x1;
-   // Write the data to the buffer
-   write_pos = (write_pos+1) % size(buffer);
-   _ = set(buffer,write_pos,clip(x+feedback*ret,-1.0,1.0));
-   return ret;
-}
-
-fun combFilter(x:real, time: real){
-
-   // y is a delayed and inverted version of x
-   time = clip(time,0.0,1.0);
-   mem buffer : array(real,256);
-   mem write_pos;
-   val index_r  = real(size(buffer)) * time;
-   val index_i  = int(floor(index_r));
-   val delta    = write_pos - index_i;
-   val read_pos = if delta < 0 then size(buffer)+delta else delta;
-   val decimal  = index_r - real(index_i);
-   val x1 = get(buffer,read_pos);
-   val x2 = get(buffer,(read_pos+1) % size(buffer));
-   val y = (x2-x1)*decimal + x1;
-   write_pos = (write_pos+1) % size(buffer);
-   _ = set(buffer,write_pos,x);
-
-   // The output is the sum of x and y (inverted)
-   return x + (-1.0*y);
-
-}
 
 /* These three functions handle midi on/off events in order to behave
  * like a monophonic sinthesizer that can hold 4 notes */
@@ -350,35 +291,6 @@ fun unit_drum(gate, odecay, pitch, swept, noise) {
    val noise_osc = noise * osc_noisef(true) / 3.0;
 
    return osc_env * osc_sat + noise_env * noise_osc;
-}
-
-fun delay_600(x, n) {
-	mem buffer:array(real,2400);
-	mem i;
-	val d = i - n;
-   	val r = if d < 0 then size(buffer)+d else d;
-	i = (i + 1) % size(buffer);
-	val y = get(buffer, r);
-	_ = set(buffer, i, x);
-	return y;
-}
-
-fun ap(x, g, n) {
-	mem pre_x, pre_y;
-	val y = - x + (1.0 + g) * pre_x + g * pre_y;
-	pre_x = delay_600(x,n);
-	pre_y = delay_600(y,n);
-
-	return y;
-}
-
-fun reverb(x) {
-	val y = ap(x, 0.5, 255);
-	y = ap(y, 0.5, 556);
-	y = ap(y, 0.5, 441);
-	y = ap(y, 0.5, 341);
-
-   return y;
 }
 
 // Main processing function
