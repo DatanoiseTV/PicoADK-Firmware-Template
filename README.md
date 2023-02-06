@@ -18,13 +18,23 @@ wavefolding, envelope amount, filter frequency and resonance.
 * The Vult DSP code is located in the vultsrc folder.
 * The includes for Vult are located in lib/vult/examples. These provide some oscillator, filter and envelope implementation along others.
 
-## Prerequisites
+## Compiling using Docker Image
+
+1. git clone --recursive https://github.com/DatanoiseTV/PicoADK-Firmware-Template.git
+2. cd PicoADK-Firmware-Template
+3. Enter the following command in your project directory:
+
+```bash
+docker run --rm -u $(id -u):$(id -g)  -v $PWD:/project -w /project datanoisetv/picoadk-dev:latest build-firmware.sh
+```
+
+## Prerequisites (non Docker)
 
 1. Install the Pico-SDK. You can find a guide at https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
 2. Install the [Vult](https://github.com/vult-dsp/vult/) compiler: `sudo npm install vult -g`
 3. (Optional) Install Ninja - apt install ninja
 
-## Compiling the firmware 
+## Compiling the firmware (non Docker)
 ```bash
 git clone --recursive https://github.com/DatanoiseTV/PicoADK-FreeRTOS-Template picoadk-template
 cd picoadk-template
