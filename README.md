@@ -19,7 +19,10 @@ wavefolding, envelope amount, filter frequency and resonance.
 * The includes for Vult are located in lib/vult/examples. These provide some oscillator, filter and envelope implementation along others.
 
 ## Compiling using Docker Image
-If you have installed docker, enter the following command in your project directory:
+
+1. git clone --recursive https://github.com/DatanoiseTV/PicoADK-Firmware-Template.git
+2. cd PicoADK-Firmware-Template
+3. Enter the following command in your project directory:
 
 ```bash
 docker run --rm -u $(id -u):$(id -g)  -v $PWD:/project -w /project datanoisetv/picoadk-dev:latest build-firmware.sh
