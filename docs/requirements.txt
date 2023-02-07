@@ -63,5 +63,3 @@ six==1.16.0
 watchdog==2.1.9
     # via mkdocs
 zipp==3.8.0
-    # via importlib-metadata
-mkdocs-with-pdf==0.9.3
