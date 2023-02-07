@@ -1,4 +1,4 @@
-site_name: My Docs
+site_name: PicoADK Documentation
 
 nav:
     - 'index.md'
@@ -11,3 +11,6 @@ theme:
     hljs_languages:
         - yaml
         - rust
+        - c
+        - cpp
+        - bash
