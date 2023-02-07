@@ -1,0 +1,13 @@
+site_name: My Docs
+
+nav:
+    - 'index.md'
+    - 'getting_started.md'
+    - 'hardware_reference.md'
+
+theme:
+    name: readthedocs
+    highlightjs: true
+    hljs_languages:
+        - yaml
+        - rust
