@@ -64,5 +64,4 @@ watchdog==2.1.9
     # via mkdocs
 zipp==3.8.0
     # via importlib-metadata
-mkdocs-with-pdf==0.6.0
-    # via -r docs/requirements.in
+mkdocs-with-pdf==0.9.3
