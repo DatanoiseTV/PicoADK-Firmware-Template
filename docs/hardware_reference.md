@@ -4,7 +4,7 @@
 
 ![image](https://user-images.githubusercontent.com/6614616/198907086-aaeb9831-ceb2-4acc-8242-45671ba2a3fd.png)
 
-Interactive pinout at https://datanoise.net/picoadk/
+Interactive pinout at [https://datanoise.net/picoadk/](https://datanoise.net/picoadk/)
 
 ## Internal Signals
 
@@ -52,5 +52,5 @@ The inputs of the ADC all have a passive low-pass filter with a cutoff frequency
 
 *Update as of "A" revision*: The LDO can supply 300mA now.
 
-### Block Diagram  (simplified)
+## Block Diagram
 ![PicoADK Diagram(1)](https://user-images.githubusercontent.com/6614616/199276802-3cfb1608-071d-42e8-8c82-e9a6716adb66.png)
