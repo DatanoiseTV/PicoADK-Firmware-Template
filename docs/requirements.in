@@ -1,4 +1,4 @@
 mkdocs
 mkdocstrings[python]
 markdown-include
-
+mkdocs-with-pdf

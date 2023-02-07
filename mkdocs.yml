@@ -14,3 +14,6 @@ theme:
         - c
         - cpp
         - bash
+
+plugins:
+    - with-pdf
