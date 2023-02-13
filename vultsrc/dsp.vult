@@ -21,21 +21,6 @@ fun sine_table(x) @[table(min = 0.0, max = 1.0, size = 1024)] {
    return sin(2.0 * pi() * x);
 }
 
-// Converts the MIDI note to increment rate at a 44100 sample rate
-fun pitchToRate(d) @[table(min = 0.0, max = 127.0, size = 1024)]
-   return 8.1758*exp(0.0577623*d)/samplerate();
-
-fun phasor(pitch:real,reset:bool){
-    mem rate,phase;
-    if(Util.change(pitch))
-        rate = pitchToRate(pitch);
-    phase =
-      if reset then 0.0 
-      else if phase > 1.0 then phase - 1.0
-      else phase;
-
-    return phase;
-}
 
 // A simple LFO with reset signal
 fun lfo(f:real,gate:bool) : real {
