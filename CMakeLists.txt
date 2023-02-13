@@ -123,6 +123,13 @@ target_link_options(main PRIVATE
         -Xlinker --print-memory-usage
 )
 
+file(GLOB files "${CMAKE_CURRENT_LIST_DIR}/piosrc/*.pio")
+foreach(file ${files})
+    message ("Adding ${file} to PIO build.")
+    pico_generate_pio_header(main ${file})
+endforeach()
+
+
 add_compile_options("-Wall" "-Wredundant-decls")
 
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
