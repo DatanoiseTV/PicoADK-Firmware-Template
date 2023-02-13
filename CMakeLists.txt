@@ -78,6 +78,7 @@ add_executable(main
     src/picoadk_hw.cpp
     src/vultin.cpp
     src/midi_input_usb.cpp
+    src/get_serial.c
     ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
 
 pico_set_program_name(main "main")
@@ -100,6 +101,7 @@ target_link_libraries(main
         hardware_timer
         hardware_watchdog
         hardware_clocks
+        pico_unique_id
         pico_bootsel_via_double_reset
         pico_util_buffer
         pico_multicore
