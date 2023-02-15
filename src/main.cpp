@@ -10,6 +10,8 @@
 #include <task.h>
 #include <queue.h>
 
+#include "arduino_compat.h"
+
 #define USE_DIN_MIDI 0
 #define DEBUG_MIDI 0
 
