@@ -34,6 +34,8 @@ typedef unsigned int word;
 
 static inline uint16_t analogRead(uint8_t pin)
 {
+    if (pin < 26 || pin > 29)
+        return 0;
     adc_select_input(pin);
     adc_run(true);
     sleep_ms(1);
