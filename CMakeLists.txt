@@ -48,7 +48,7 @@ pico_sdk_init()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
 
-add_subdirectory(lib/audio)
+add_subdirectory(lib/audio_new)
 add_subdirectory(lib/oled)
 
 # Generate Vult C++ code from Vult Code every time
@@ -108,7 +108,7 @@ target_link_libraries(main
         pico_stdio_uart
         tinyusb_device
         tinyusb_board
-	Audio
+	AudioNew
         Oled
         FreeRTOS
         )

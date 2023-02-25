@@ -2,10 +2,9 @@
 #include "project_config.h"
 #include "bsp/board.h"
 #include "midi_input_usb.h"
-#include "audio_subsystem.h"
 #include "vult.h"
 #include "picoadk_hw.h"
-
+#include "i2s.h"
 #include "FreeRTOS.h"
 #include <task.h>
 #include <queue.h>
@@ -18,8 +17,8 @@
 // Set to 0 if you want to play notes via USB MIDI
 #define PLAY_RANDOM_NOTES 1
 
-audio_buffer_pool_t *ap;
 Dsp_process_type ctx;
+static __attribute__((aligned(8))) pio_i2s i2s;
 
 MIDIInputUSB usbmidi;
 
@@ -30,6 +29,9 @@ extern "C"
 
     volatile long dsp_start;
     volatile long dsp_end;
+
+   static void process_audio(const int32_t* input, int32_t* output, size_t num_frames);
+   static void dma_i2s_in_handler(void);
 
     // This task prints the statistics about the running FreeRTOS tasks
     // and how long it takes for the I2S callback to run.
@@ -179,7 +181,7 @@ extern "C"
         Dsp_default(ctx);
 
         // Initialize the audio subsystem
-        ap = init_audio();
+        i2s_program_start_synched(pio0, &i2s_config_default, dma_i2s_in_handler, &i2s);
 
         // Create FreeRTOS Tasks for USB MIDI and printing statistics
         xTaskCreate(usb_midi_task, "USBMIDI", 4096, NULL, configMAX_PRIORITIES, NULL);
@@ -200,6 +202,7 @@ extern "C"
         }
     }
 
+    /*
     // This fis the I2S callback function. It is called when the I2S subsystem
     // needs more audio data. It is called at a fixed rate of 48kHz.
     // The audio data is stored in the audio_buffer_t struct.
@@ -239,6 +242,33 @@ extern "C"
         give_audio_buffer(ap, buffer);
         return;
     }
+    */
+
+
+
+static void process_audio(const int32_t* input, int32_t* output, size_t num_frames) {
+    // Just copy the input to the output
+    for (size_t i = 0; i < num_frames * 2; i++) {
+        //output[i] = input[i];
+         Dsp_process(ctx, input[i], 0, 0, 0);
+        fix16_t left_out = Dsp_process_ret_0(ctx);
+        fix16_t right_out = Dsp_process_ret_1(ctx);
+        output[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT
+        output[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
+    
+    }
+}
+
+   static void dma_i2s_in_handler(void) {
+    if (*(int32_t**)dma_hw->ch[i2s.dma_ch_in_ctrl].read_addr == i2s.input_buffer) {
+        // It is inputting to the second buffer so we can overwrite the first
+        process_audio(i2s.input_buffer, i2s.output_buffer, AUDIO_BUFFER_FRAMES);
+    } else {
+        // It is currently inputting the first buffer, so we write to the second
+        process_audio(&i2s.input_buffer[STEREO_BUFFER_SIZE], &i2s.output_buffer[STEREO_BUFFER_SIZE], AUDIO_BUFFER_FRAMES);
+    }
+    dma_hw->ints0 = 1u << i2s.dma_ch_in_data;  // clear the IRQ
+   }
 
 #ifdef __cplusplus
 }
