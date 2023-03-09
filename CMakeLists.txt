@@ -51,13 +51,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_D
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
 
+# print the CMAKE_SYSTEM_PROCESSOR
+message("CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 	set(VULTC_EXE "tools/vultc.exe")
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
 	set(VULTC_EXE "tools/vultc-mac")
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
 	set(VULTC_EXE "tools/vultc")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
         set(VULTC_EXE "/usr/local/bin/vultc")
 else()
 	message(FATAL_ERROR "Unsupported platform")
