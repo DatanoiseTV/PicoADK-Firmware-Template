@@ -309,7 +309,7 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    mem pitchBend;
    mem velo;
 
-   val foobar = analogRead(0);
+   //val foobar = analogRead(0);
 
    val gate = notes:mono_isGateOn();
 
