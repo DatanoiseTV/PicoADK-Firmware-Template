@@ -62,11 +62,25 @@ int adc128_read(uint8_t chan)
         if (chan > 7)
                 return 0;
         gpio_put(13, 0);
-        uint8_t data[2] = {(chan << 3), 0};
+        uint8_t data[2] = {(uint8_t)(chan << 3), 0};
         uint8_t rxData[2];
         spi_write_read_blocking(spi1, data, rxData, 2);
         gpio_put(13, 1);
         uint16_t result = (rxData[0] << 8) | rxData[1];
 
         return result;
+}
+
+// alternative function to provide an external function for vult
+extern "C" fix16_t adc128_read_vult(int chan){
+        if (chan > 7)
+                return 0;
+        gpio_put(13, 0);
+        uint8_t data[2] = {(uint8_t)(chan << 3), 0};
+        uint8_t rxData[2];
+        spi_write_read_blocking(spi1, data, rxData, 2);
+        gpio_put(13, 1);
+        uint16_t result = (rxData[0] << 8) | rxData[1];
+
+        return (result << 2);
 }
