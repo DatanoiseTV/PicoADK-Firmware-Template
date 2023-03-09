@@ -3,6 +3,8 @@ CC Mapping see lower part of the code.
 Reacts to 4 potentiometers on ADC0-ADC4 inputs (bottom left 4 pins of the board.
 */
 
+external analogRead(x:int) : real "adc128_read_vult";
+
 fun smooth_cv(input:real) : real {
    mem x;
    x = x+(input-x)*0.001;
@@ -306,6 +308,8 @@ fun process(cv0:real, cv1:real, cv2:real, cv3:real) {
    mem vca_attack, vca_decay, vca_sustain, vca_release;
    mem pitchBend;
    mem velo;
+
+   val foobar = analogRead(0);
 
    val gate = notes:mono_isGateOn();
 
