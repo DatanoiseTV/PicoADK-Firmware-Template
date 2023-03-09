@@ -127,7 +127,7 @@ target_link_libraries(main
         tinyusb_device
         tinyusb_board
 	Audio
-        Oled
+        #Oled
         FreeRTOS
         )
 
