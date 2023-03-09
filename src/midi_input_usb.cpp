@@ -20,7 +20,7 @@ void MIDIInputUSB::process()
     uint8_t packet[4];
     while (tud_midi_available())
     {
-        tud_midi_read(packet, 3);
+        tud_midi_stream_read(packet, 3);
 
         #ifdef DEBUG_MIID
         printf("%02X %02X %02X %02X\n", packet[0], packet[1], packet[2], packet[3]);
