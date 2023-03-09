@@ -1,4 +1,4 @@
-# Generated Cmake Pico project file
+# PicoADK CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.13)
 
@@ -32,26 +32,16 @@ target_include_directories(FreeRTOS PUBLIC
     ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
 )
 
-#list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-#set(CMAKE_VULT_COMPILER "/usr/local/bin/vultc")
 
 project(main C CXX ASM)
 
-
-
-# set(PICO_CXX_ENABLE_EXCEPTIONS 1)
-
-# Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
-
-# Add executable. Default name is the project name, version 0.1
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
 
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
 
-# print the CMAKE_SYSTEM_PROCESSOR
 message("CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
@@ -99,7 +89,6 @@ add_custom_command(
         COMMENT "Transcompiling Vult DSP Code to C++."
 )
 
-
 add_executable(main
     vultsrc/dsp.vult
     src/usb_descriptors.c
@@ -142,8 +131,6 @@ target_link_libraries(main
         FreeRTOS
         )
 
-
-
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
 )
@@ -157,7 +144,6 @@ foreach(file ${files})
     message ("Adding ${file} to PIO build.")
     pico_generate_pio_header(main ${file})
 endforeach()
-
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
