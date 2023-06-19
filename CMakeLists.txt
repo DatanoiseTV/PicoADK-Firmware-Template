@@ -45,39 +45,11 @@ add_subdirectory(lib/oled)
 message("CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-	set(VULTC_EXE "tools/vultc.exe")
-elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-	set(VULTC_EXE "tools/vultc-mac")
-elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-        set(VULTC_EXE "tools/vultc-arm")
-elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-        set(VULTC_EXE "/usr/local/bin/vultc")
-elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-	set(VULTC_EXE "tools/vultc")
-else()
-	message(FATAL_ERROR "Unsupported platform")
-endif()
-
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${VULTC_EXE}")
-	if(NOT EXISTS "${VULTC_EXE}")
-		set(VULT_CMD "")
-	else()
-		set(VULT_CMD "${VULTC_EXE}")
-	endif()
-else()
-	set(VULT_CMD "${CMAKE_CURRENT_SOURCE_DIR}/${VULTC_EXE}")
-endif()
-
-if(NOT VULT_CMD)
-	message(FATAL_ERROR "Vult compiler not found. Download the compiler from https://github.com/modlfo/vult/releases and place it in the project folder or add it to the path.")
-endif()
-
 # Generate Vult C++ code from Vult Code every time
 set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/vult/examples")
 add_custom_command(
         OUTPUT ALL ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
-        COMMAND ${VULT_CMD} ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
+        COMMAND vultc ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
                 -i ${VULT_EXAMPLE_PATH}/osc
                 -i ${VULT_EXAMPLE_PATH}/util
                 -i ${VULT_EXAMPLE_PATH}/filters
