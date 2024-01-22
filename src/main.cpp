@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "project_config.h"
+
+#if __has_include("bsp/board_api.h")
+#include "bsp/board_api.h"
+#else
 #include "bsp/board.h"
+#endif
+
 #include "midi_input_usb.h"
 #include "audio_subsystem.h"
 #include "vult.h"
