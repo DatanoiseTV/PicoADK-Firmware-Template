@@ -7,12 +7,12 @@ audio_buffer_pool_t *init_audio()
 
     static audio_format_t audio_format = {
         .sample_freq = 44100,
-        .pcm_format = AUDIO_PCM_FORMAT_S32,
+        .pcm_format = AUDIO_PCM_FORMAT_S16,
         .channel_count = (audio_channel_t)2};
 
     static audio_buffer_format_t producer_format = {
         .format = &audio_format,
-        .sample_stride = 8};
+        .sample_stride = 4};
 
     audio_buffer_pool_t *producer_pool = audio_new_producer_pool(&producer_format, 3,
                                                                  SAMPLES_PER_BUFFER); // todo correct size
@@ -43,7 +43,7 @@ audio_buffer_pool_t *init_audio()
         int32_t *samples = (int32_t *)buffer->buffer->bytes;
 
         printf("PicoAudio: Initializing audio buffer with %d samples\n",
-               buffer->buffer->size / sizeof(int32_t));
+               buffer->buffer->size / sizeof(int16_t));
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             samples[i * 2 + 0] = 0;
