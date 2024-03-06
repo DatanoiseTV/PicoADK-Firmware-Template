@@ -216,7 +216,7 @@ extern "C"
         {
             return;
         }
-        int32_t *samples = (int32_t *)buffer->buffer->bytes;
+        int16_t *samples = (int16_t *)buffer->buffer->bytes;
 
         dsp_start = to_us_since_boot(get_absolute_time());
 
@@ -233,10 +233,10 @@ extern "C"
             // smp should be the output of your processing code.
             // In case of the Vult Example, this is Dsp_process(ctx);
             Dsp_process(ctx, cv0, cv1, cv2, cv3);
-            fix16_t left_out = Dsp_process_ret_0(ctx);
-            fix16_t right_out = Dsp_process_ret_1(ctx);
-            samples[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT
-            samples[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
+            fix16_t left_out = fix_to_short(Dsp_process_ret_0(ctx));
+            fix16_t right_out = fix_to_short(Dsp_process_ret_1(ctx));
+            samples[i * 2 + 0] = left_out;  // LEFT
+            samples[i * 2 + 1] = right_out; // RIGHT
         }
 
         dsp_end = to_us_since_boot(get_absolute_time());

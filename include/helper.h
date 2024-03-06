@@ -16,6 +16,18 @@ static inline int32_t fix16_to_int32(fix16_t x)
     return out << 15u;
 }
 
+static inline int16_t fix16_to_int16(fix16_t x)
+{
+fix16_t out;
+    if (x >= int_to_fix(1))
+        out = int_to_fix(1) - 1;
+    else if (x <= int_to_fix(-1))
+        out = int_to_fix(-1) + 1;
+    else
+        out = x;
+    return  (out << 15u) / 2; 
+}
+
 static inline int rev_log_scale(int x)
 {
     // Calculate reverse logarithmic value from linear input
