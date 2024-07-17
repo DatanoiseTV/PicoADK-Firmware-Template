@@ -175,7 +175,7 @@ void ssd1306_draw_line(ssd1306_t *p, uint32_t x1, uint32_t y1, uint32_t x2, uint
         return;
     }
 
-    float m = (float)(y2 - y1) / (float)(x2 - x1);
+    float m = (float)((int32_t)y2 - (int32_t)y1) / (float)(x2 - x1);
 
     for (int32_t i = x1; i <= x2; ++i)
     {
