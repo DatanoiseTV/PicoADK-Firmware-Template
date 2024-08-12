@@ -11,7 +11,8 @@ set(PICO_EXTRAS_PATH "../lib/pico-extras")
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 
-set(PICO_BOARD datanoisetv_rp2040_dsp)
+set(PICO_BOARD datanoisetv_rp2040_dsp)set(PICO_DEFAULT_COMPILER "pico_arm_cortex_m33_gcc")
+set(PICO_CHIP rp2350)
 
 set(FREERTOS_SRC_DIRECTORY "${PICO_SDK_PATH}/lib/tinyusb/lib/FreeRTOS-Kernel")
 
