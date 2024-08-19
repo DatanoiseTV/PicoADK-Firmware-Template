@@ -213,10 +213,18 @@ extern "C"
             // smp should be the output of your processing code.
             // In case of the Vult Example, this is Dsp_process(ctx);
             Dsp_process(ctx, cv0, cv1, cv2, cv3);
+            VULT_DATA_TYPE left_out = Dsp_process_ret_0(ctx);
+            VULT_DATA_TYPE right_out = Dsp_process_ret_1(ctx);
+            samples[i * 2 + 0] = VULT_DATA_CONVERT(left_out);  // LEFT
+            samples[i * 2 + 1] = VULT_DATA_CONVERT(right_out); // RIGHT
+
+            /*
+                        Dsp_process(ctx, cv0, cv1, cv2, cv3);
             float left_out = Dsp_process_ret_0(ctx);
             float right_out = Dsp_process_ret_1(ctx);
             samples[i * 2 + 0] = float_to_int32(left_out);  // LEFT
             samples[i * 2 + 1] = float_to_int32(right_out); // RIGHT
+            */
         }
 
         dsp_end = to_us_since_boot(get_absolute_time());

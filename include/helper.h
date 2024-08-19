@@ -4,6 +4,15 @@
 
 #include "vultin.h"
 
+#if PICO_RP2350
+#define VULT_DATA_TYPE float
+#define VULT_DATA_CONVERT(x) float_to_int32(x)
+#else
+#define VULT_DATA_TYPE fix16_t
+#define VULT_DATA_CONVERT(x) fix16_to_int32(x)
+#endif
+
+
 static inline int32_t fix16_to_int32(fix16_t x)
 {
     fix16_t out;

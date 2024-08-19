@@ -26,27 +26,34 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_D
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
 
-message("CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
-message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
+# Set the real flag based on the PICO_PLATFORM variable
+if (DEFINED PICO_PLATFORM AND PICO_PLATFORM STREQUAL "rp2350-arm-s")
+    set(REAL_TYPE_FLAG "float")
+    message("Using float for real type")
+else()
+    set(REAL_TYPE_FLAG "fixed")
+    message("Using fixed for real type")
+endif()
 
-# Generate Vult C++ code from Vult Code every time
-set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/vult/examples")
+set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/vult/examples")
+
 add_custom_command(
-        OUTPUT ALL ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
-        COMMAND vultc ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
-                -i ${VULT_EXAMPLE_PATH}/osc
-                -i ${VULT_EXAMPLE_PATH}/util
-                -i ${VULT_EXAMPLE_PATH}/filters
-                -i ${VULT_EXAMPLE_PATH}/env
-                -i ${VULT_EXAMPLE_PATH}/midi
-                -i ${VULT_EXAMPLE_PATH}/effects
-                -i ${VULT_EXAMPLE_PATH}/units
-                -ccode
-                -real float
-                -samplerate 44140
-                -o vult 
-        COMMENT "Transcompiling Vult DSP Code to C++."
+    OUTPUT ALL ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
+    COMMAND vultc ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
+            -i ${VULT_EXAMPLE_PATH}/osc
+            -i ${VULT_EXAMPLE_PATH}/util
+            -i ${VULT_EXAMPLE_PATH}/filters
+            -i ${VULT_EXAMPLE_PATH}/env
+            -i ${VULT_EXAMPLE_PATH}/midi
+            -i ${VULT_EXAMPLE_PATH}/effects
+            -i ${VULT_EXAMPLE_PATH}/units
+            -ccode
+            -real ${REAL_TYPE_FLAG}
+            -samplerate 44100
+            -o vult 
+    COMMENT "Transcompiling Vult DSP Code to C++."
 )
+
 
 if (NOT FREERTOS_KERNEL_PATH AND NOT DEFINED ENV{FREERTOS_KERNEL_PATH})
     message("Skipping FreeRTOS examples as FREERTOS_KERNEL_PATH not defined")
@@ -115,9 +122,14 @@ endforeach()
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
+# compile the following thins only if rp2040 is used
+if (PICO_PLATFORM STREQUAL "rp2040")
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
 
 pico_set_boot_stage2(main slower_boot2)
+else()
+message("Skipping slower_boot2 as PICO_PLATFORM is not rp2040")
+endif()
 
 pico_add_extra_outputs(main)

@@ -4,9 +4,13 @@ void picoadk_init()
 {
         // Overclock the CPU to 402 MHz.
 
+        #if PICO_RP2040
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
         set_sys_clock_khz(402000, true);
+        #else
+        #warning "No overclocking will performed, as this is untested on plaftorms other than the RP2040."
+        #endif
 
         // Initialize TinyUSB
         board_init();
