@@ -6,33 +6,15 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 14)
 
 set(PICO_EXTRAS_PATH "../lib/pico-extras")
+set(PICO_BOARD datanoisetv_rp2350_dsp)
+set(PICO_PLATFORM_CMAKE_FILE "${PICO_SDK_PATH}/src/rp2350-arm-s.cmake")
+set(PICO_PLATFORM "rp2350")
+set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
-
-set(PICO_BOARD datanoisetv_rp2040_dsp)set(PICO_DEFAULT_COMPILER "pico_arm_cortex_m33_gcc")
-set(PICO_CHIP rp2350)
-
-set(FREERTOS_SRC_DIRECTORY "${PICO_SDK_PATH}/lib/tinyusb/lib/FreeRTOS-Kernel")
-
-add_library(FreeRTOS STATIC
-    ${FREERTOS_SRC_DIRECTORY}/event_groups.c
-    ${FREERTOS_SRC_DIRECTORY}/list.c
-    ${FREERTOS_SRC_DIRECTORY}/queue.c
-    ${FREERTOS_SRC_DIRECTORY}/stream_buffer.c
-    ${FREERTOS_SRC_DIRECTORY}/tasks.c
-    ${FREERTOS_SRC_DIRECTORY}/timers.c
-    ${FREERTOS_SRC_DIRECTORY}/portable/MemMang/heap_3.c
-    ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0/port.c
-)
-
-target_include_directories(FreeRTOS PUBLIC
-    ${FREERTOS_CFG_DIRECTORY}/
-    ${FREERTOS_SRC_DIRECTORY}/include
-    ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
-)
-
+include(FreeRTOS_Kernel_import.cmake)
 
 project(main C CXX ASM)
 
@@ -65,6 +47,11 @@ add_custom_command(
         COMMENT "Transcompiling Vult DSP Code to C++."
 )
 
+if (NOT FREERTOS_KERNEL_PATH AND NOT DEFINED ENV{FREERTOS_KERNEL_PATH})
+    message("Skipping FreeRTOS examples as FREERTOS_KERNEL_PATH not defined")
+    return()
+endif()
+
 add_executable(main
     vultsrc/dsp.vult
     src/usb_descriptors.c
@@ -73,6 +60,7 @@ add_executable(main
     src/vultin.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
+    lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
     ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
 
 pico_set_program_name(main "main")
@@ -95,6 +83,8 @@ target_link_libraries(main
         hardware_timer
         hardware_watchdog
         hardware_clocks
+        hardware_sync_spin_lock
+        hardware_sync
         pico_unique_id
         pico_bootsel_via_double_reset
         pico_util_buffer
@@ -104,11 +94,12 @@ target_link_libraries(main
         tinyusb_board
 	Audio
         #Oled
-        FreeRTOS
+        FreeRTOS-Kernel
         )
 
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
+        PICO_USE_SW_SPIN_LOCKS=1
 )
 
 target_link_options(main PRIVATE

@@ -4,3 +4,6 @@
 [submodule "lib/vult"]
 	path = lib/vult
 	url = https://github.com/vult-dsp/vult.git
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/raspberrypi/FreeRTOS-Kernel.git
