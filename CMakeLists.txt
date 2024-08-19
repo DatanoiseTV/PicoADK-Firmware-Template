@@ -10,6 +10,7 @@ set(PICO_BOARD datanoisetv_rp2350_dsp)
 set(PICO_PLATFORM_CMAKE_FILE "${PICO_SDK_PATH}/src/rp2350-arm-s.cmake")
 set(PICO_PLATFORM "rp2350")
 set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel")
+set(PICO_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
