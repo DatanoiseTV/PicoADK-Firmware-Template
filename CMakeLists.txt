@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(PICO_EXTRAS_PATH "../lib/pico-extras")
 set(PICO_BOARD datanoisetv_rp2350_dsp)
-#set(PICO_PLATFORM_CMAKE_FILE "${PICO_SDK_PATH}/src/rp2350-arm-s.cmake")
 set(PICO_PLATFORM "rp2350-arm-s")
 set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel")
 set(PICO_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk")

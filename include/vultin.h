@@ -91,8 +91,13 @@ static_inline fix16_t fix_mul(fix16_t x, fix16_t y) {
 static_inline fix16_t fix_div(fix16_t a, fix16_t b) {
    if (b == 0)
       return 0;
+   #if PICO_RP2040
    fix16_t result = div_s64s64(((int64_t)a) << 16, (int64_t)b); // This function is specific to the RP2040
-   // fix16_t result = (((int64_t)a) << 16) / ((int64_t)b);
+   #warning "Using RP2040 hardware division"
+   #else
+   fix16_t result = (((int64_t)a) << 16) / ((int64_t)b);
+   #warning "Using native division"
+   #endif
    return result;
 }
 
