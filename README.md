@@ -20,6 +20,8 @@ wavefolding, envelope amount, filter frequency and resonance.
 
 ## Compiling using PicoADK Docker Image (easy)
 
+*** Currently broken, will be fixed soon. ***
+
 ### Using the script
 
 Just execute **./build-firmware-docker.sh** in the project folder.
