@@ -1,3 +1,27 @@
+# PicoADK v2
+
+We are currently working on the PicoADK v2 - the successor to the PicoADK v1. It is powered by the RP2350A Cortex-M33 MCU, which has floating point support along other features.
+
+<img width="540" alt="Advert_PicoADKv2" src="https://github.com/user-attachments/assets/82f0d756-e4cc-4e43-a18b-3dda2834ecd2">
+
+
+For firmware progress check [the RP235x branch](https://github.com/DatanoiseTV/PicoADK-Firmware-Template/tree/RP235x)
+
+- **Powerful MCU**: Equipped with a Raspberry Pi RP2350A MCU (Dual Core 150MHz with overclocking capability, Hazard3 RISC-V or Cortex-M33, software selectable) for fast computing.
+- **Lot of Storage**: 4 MB QSPI Flash for your Code and Data.
+- **Expandable Memory**: Optional 8MB QSPI PSRAM for applications which need more RAM (e.g., long delays).
+- **Connectivity**: QUIIC / I2C Connector.
+- **Debugging Features**: SWD Debug Port.
+- **Storage Options**: TF-Card (Micro) on the bottom of the PCB (SPI or SDIO 4-bit Mode capable).
+- **MIDI In Circuit** with Optocoupler.
+- **Presoldered Pin Headers**.
+- **Power LED**.
+- **User LED**.
+- **Type-C for Programming and User Applications**.
+- **5-pin USB pins** (e.g., for USB Host).
+- **I2S Pins exposed on the headers**, to allow for connecting an ADC.
+
+
 # PicoADK - Audio Development Kit Firmware
 
 ![PicoADK_Top](https://user-images.githubusercontent.com/6614616/204331473-485c4a37-0c32-4387-92df-22c15a2e22aa.jpg)
