@@ -4,3 +4,9 @@
 [submodule "lib/vult"]
 	path = lib/vult
 	url = https://github.com/vult-dsp/vult.git
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/raspberrypi/FreeRTOS-Kernel.git
+[submodule "lib/pico-sdk"]
+	path = lib/pico-sdk
+	url = https://github.com/DatanoiseTV/pico-sdk

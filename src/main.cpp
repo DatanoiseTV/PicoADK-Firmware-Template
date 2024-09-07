@@ -37,25 +37,6 @@ extern "C"
     volatile long dsp_start;
     volatile long dsp_end;
 
-    // This task prints the statistics about the running FreeRTOS tasks
-    // and how long it takes for the I2S callback to run.
-    void print_task(void *p)
-    {
-        char ptrTaskList[2048];
-        while (1)
-        {
-            vTaskList(ptrTaskList);
-            printf("\033[2J");
-            printf("\033[0;0HTask\t\tState\tPrio\tStack\tNum\n%s\n", ptrTaskList);
-            printf("======================================================\n");
-            printf("B = Blocked, R = Ready, D = Deleted, S = Suspended\n");
-            printf("Milliseconds since boot: %d\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
-            printf("dsp task took %d uS\n", dsp_end - dsp_start);
-            watchdog_update();
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
-    }
-
     // MIDI callbacks
     void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
     {
@@ -189,7 +170,6 @@ extern "C"
 
         // Create FreeRTOS Tasks for USB MIDI and printing statistics
         xTaskCreate(usb_midi_task, "USBMIDI", 4096, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(print_task, "TASKLIST", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
         xTaskCreate(blinker_task, "BLINKER", 128, NULL, configMAX_PRIORITIES - 1, NULL);
 #if PLAY_RANDOM_NOTES
         xTaskCreate(play_task, "PLAY", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
@@ -233,10 +213,18 @@ extern "C"
             // smp should be the output of your processing code.
             // In case of the Vult Example, this is Dsp_process(ctx);
             Dsp_process(ctx, cv0, cv1, cv2, cv3);
-            fix16_t left_out = Dsp_process_ret_0(ctx);
-            fix16_t right_out = Dsp_process_ret_1(ctx);
-            samples[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT
-            samples[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
+            VULT_DATA_TYPE left_out = Dsp_process_ret_0(ctx);
+            VULT_DATA_TYPE right_out = Dsp_process_ret_1(ctx);
+            samples[i * 2 + 0] = VULT_DATA_CONVERT(left_out);  // LEFT
+            samples[i * 2 + 1] = VULT_DATA_CONVERT(right_out); // RIGHT
+
+            /*
+                        Dsp_process(ctx, cv0, cv1, cv2, cv3);
+            float left_out = Dsp_process_ret_0(ctx);
+            float right_out = Dsp_process_ret_1(ctx);
+            samples[i * 2 + 0] = float_to_int32(left_out);  // LEFT
+            samples[i * 2 + 1] = float_to_int32(right_out); // RIGHT
+            */
         }
 
         dsp_end = to_us_since_boot(get_absolute_time());

@@ -19,5 +19,8 @@
     "cmake.buildBeforeRun": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "nrf-connect.topdir": "/home/syso/dev/ztry",
-    "nrf-connect.toolchain.path": "PATH"
+    "nrf-connect.toolchain.path": "PATH",
+    "files.associations": {
+        "__locale": "cpp"
+    }
 }
