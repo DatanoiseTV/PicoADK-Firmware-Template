@@ -115,6 +115,7 @@ target_link_libraries(main
         pico_multicore
         pico_stdio_uart
         tinyusb_device
+        tinyusb_host
         tinyusb_board
 	Audio
         #Oled

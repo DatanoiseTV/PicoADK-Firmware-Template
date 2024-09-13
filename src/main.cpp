@@ -61,7 +61,11 @@ extern "C" {
         while (1)
         {
             // TinyUSB Device Task
+            #if (OPT_MODE_HOST == 1)
+            tuh_task();
+            #else
             tud_task();
+            #endif
             usbMIDI.process();
         }
     }

@@ -39,6 +39,7 @@
   #error CFG_TUSB_MCU must be defined
 #endif
 
+
 // RHPort number used for device can be defined by board.mk, default to port 0
 #ifndef BOARD_DEVICE_RHPORT_NUM
   #define BOARD_DEVICE_RHPORT_NUM     0
@@ -100,6 +101,8 @@
 #define CFG_TUD_HID               0
 #define CFG_TUD_MIDI              1
 #define CFG_TUD_VENDOR            0
+
+#define CFG_TUH_MIDI              CFG_TUD_MIDI
 
 // MIDI FIFO size of TX and RX
 #define CFG_TUD_MIDI_RX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
