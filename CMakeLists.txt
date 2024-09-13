@@ -11,6 +11,16 @@ set(PICO_PLATFORM "rp2350-arm-s")
 set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel")
 set(PICO_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk")
 
+
+# Define values for the placeholders
+set(FLASH_LENGTH 4M)      # Example value for FLASH length
+set(PSRAM_LENGTH 8M)      # Example value for PSRAM length
+set(RAM_LENGTH 520K)        # Example value for RAM length
+set(EEPROM_START 0x1FFF000) # Example EEPROM start address
+set(FS_START 0x08080000)    # Example file system start address
+set(FS_END 0x080C0000)      # Example file system end address
+
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -34,25 +44,33 @@ else()
     message("Using fixed for real type")
 endif()
 
-set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/vult/examples")
 
-add_custom_command(
-    OUTPUT ALL ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
-    COMMAND vultc ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
-            -i ${VULT_EXAMPLE_PATH}/osc
-            -i ${VULT_EXAMPLE_PATH}/util
-            -i ${VULT_EXAMPLE_PATH}/filters
-            -i ${VULT_EXAMPLE_PATH}/env
-            -i ${VULT_EXAMPLE_PATH}/midi
-            -i ${VULT_EXAMPLE_PATH}/effects
-            -i ${VULT_EXAMPLE_PATH}/units
-            -ccode
-            -real ${REAL_TYPE_FLAG}
-            -samplerate 44100
-            -o vult 
-    COMMENT "Transcompiling Vult DSP Code to C++."
-)
 
+# You could add your DSP transcompiler here
+# set(VULT_EXAMPLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/vult/examples")
+# add_custom_command(
+#    OUTPUT ALL ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp
+#    COMMAND vultc ${CMAKE_CURRENT_LIST_DIR}/vultsrc/dsp.vult
+#            -i ${VULT_EXAMPLE_PATH}/osc
+#            -i ${VULT_EXAMPLE_PATH}/util
+#            -i ${VULT_EXAMPLE_PATH}/filters
+#            -i ${VULT_EXAMPLE_PATH}/env
+#            -i ${VULT_EXAMPLE_PATH}/midi
+#            -i ${VULT_EXAMPLE_PATH}/effects
+#            -i ${VULT_EXAMPLE_PATH}/units
+#            -ccode
+#            -real ${REAL_TYPE_FLAG}
+#            -samplerate 44100
+#            -o vult 
+#    COMMENT "Transcompiling Vult DSP Code to C++."
+#)
+
+# TODO: PSRAM Linker Map
+#configure_file(
+#    ${CMAKE_SOURCE_DIR}/memmap.ld.in  # Input template file
+#    ${CMAKE_BINARY_DIR}/memmap.ld     # Output linker script file
+#    @ONLY                             # Use only @var@ style placeholders
+#)
 
 if (NOT FREERTOS_KERNEL_PATH AND NOT DEFINED ENV{FREERTOS_KERNEL_PATH})
     message("Skipping FreeRTOS examples as FREERTOS_KERNEL_PATH not defined")
@@ -60,15 +78,14 @@ if (NOT FREERTOS_KERNEL_PATH AND NOT DEFINED ENV{FREERTOS_KERNEL_PATH})
 endif()
 
 add_executable(main
-    vultsrc/dsp.vult
+    # vultsrc/dsp.vult
     src/usb_descriptors.c
     src/main.cpp 
     src/picoadk_hw.cpp
-    src/vultin.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
-    ${CMAKE_CURRENT_BINARY_DIR}/vult.cpp)
+)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
@@ -112,6 +129,9 @@ target_compile_definitions(main PRIVATE
 target_link_options(main PRIVATE
         -Xlinker --print-memory-usage
 )
+
+# TODO: PSRAM Linker Map
+# pico_set_linker_script(main ${CMAKE_BINARY_DIR}/memmap.ld)
 
 file(GLOB files "${CMAKE_CURRENT_LIST_DIR}/piosrc/*.pio")
 foreach(file ${files})

@@ -133,7 +133,7 @@ char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: supported language is English (0x0409)
   "Datanoise",                   // 1: Manufacturer
-  "PicoADK",                     // 2: Product
+  "PicoADK v2",                     // 2: Product
   usb_serial,                    // 3: Serials, should use chip ID
 };
 

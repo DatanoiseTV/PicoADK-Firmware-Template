@@ -1,9 +1,8 @@
 #include "picoadk_hw.h"
+#include "hardware/structs/xip_ctrl.h"
 
 void picoadk_init()
 {
-        // Overclock the CPU to 402 MHz.
-
         #if PICO_RP2040
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
@@ -59,6 +58,10 @@ void picoadk_init()
         spi_init(spi1, 16000000);
         spi_set_format(spi1, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         spi_set_slave(spi1, false);
+
+        // Set up PSRAM
+        gpio_set_function(47, GPIO_FUNC_XIP_CS1); // CS for PSRAM
+        xip_ctrl_hw->ctrl|=XIP_CTRL_WRITABLE_M1_BITS;
 }
 
 int adc128_read(uint8_t chan)
@@ -75,16 +78,20 @@ int adc128_read(uint8_t chan)
         return result;
 }
 
-// alternative function to provide an external function for vult
-extern "C" fix16_t adc128_read_vult(int chan){
-        if (chan > 7)
-                return 0;
-        gpio_put(13, 0);
-        uint8_t data[2] = {(uint8_t)(chan << 3), 0};
-        uint8_t rxData[2];
-        spi_write_read_blocking(spi1, data, rxData, 2);
-        gpio_put(13, 1);
-        uint16_t result = (rxData[0] << 8) | rxData[1];
 
-        return (result << 2);
+#define PSRAM_BASE_ADDRESS ((volatile uint8_t*)0x11000000)
+extern "C" float psram_read(uint32_t addr)
+{
+        // convert the 32-bit result from the psram to float
+        uint32_t result = *((uint32_t*)(PSRAM_BASE_ADDRESS + addr));
+        return (float)result / 0x7FFFFFFF;
+}
+
+extern "C" int32_t psram_write(uint32_t addr, float value)
+{
+        // convert float (-1.0 to 1.0) to 32-bit integer (0x80000000 to 0x7FFFFFFF)
+        uint32_t data = (uint32_t)(value * 0x7FFFFFFF);
+        // write the 32-bit integer to the psram
+        *((uint32_t*)(PSRAM_BASE_ADDRESS + addr)) = data;
+        return 0;
 }
