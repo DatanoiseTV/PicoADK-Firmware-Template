@@ -10,3 +10,6 @@
 [submodule "lib/pico-sdk"]
 	path = lib/pico-sdk
 	url = https://github.com/DatanoiseTV/pico-sdk
+[submodule "lib/usb_midi_host"]
+	path = lib/usb_midi_host
+	url = https://github.com/rppicomidi/usb_midi_host

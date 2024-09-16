@@ -25,7 +25,7 @@
 
 #include "tusb.h"
 #include "get_serial.h"
-
+#if (USE_USB_MIDI_HOST == 0)
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
  *
@@ -176,3 +176,4 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
   return _desc_str;
 }
+#endif

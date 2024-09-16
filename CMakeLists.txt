@@ -21,6 +21,9 @@ set(FS_START 0x08080000)    # Example file system start address
 set(FS_END 0x080C0000)      # Example file system end address
 
 
+set(DSP_SAMPLE_RATE 48000)
+
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -34,6 +37,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_D
 
 add_subdirectory(lib/audio)
 add_subdirectory(lib/oled)
+add_subdirectory(lib/heavy)
 
 # Set the real flag based on the PICO_PLATFORM variable
 if (DEFINED PICO_PLATFORM AND PICO_PLATFORM STREQUAL "rp2350-arm-s")
@@ -117,14 +121,21 @@ target_link_libraries(main
         tinyusb_device
         tinyusb_host
         tinyusb_board
-	Audio
+	    Audio
         #Oled
         FreeRTOS-Kernel
+        heavy
         )
 
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
         PICO_USE_SW_SPIN_LOCKS=1
+        USE_USB_MIDI_HOST=0
+        SAMPLE_RATE=${DSP_SAMPLE_RATE}
+)
+
+target_compile_definitions(Audio PRIVATE
+        SAMPLE_RATE=${DSP_SAMPLE_RATE}
 )
 
 target_link_options(main PRIVATE

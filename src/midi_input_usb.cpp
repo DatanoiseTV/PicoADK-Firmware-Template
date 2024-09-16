@@ -32,21 +32,17 @@ uint16_t MIDIInputUSB::parsePitchBend(const uint8_t* packet) {
     return (packet[2] << 7) | packet[1];
 }
 
-// macro for reading midi packets. in usb host mode, tuh_midi_stream_read is used instead, which is a wrapper for this function
-#if (OPT_MODE_HOST == 1)
-#define TINYUSB_MIDI_STREAM_READ(packet, len) tuh_midi_stream_read(packet, len)
-#define TINYUSB_MIDI_STREAM_AVAILABLE() tuh_midi_available()
-#error "We are in host mode"
-#else
-#define TINYUSB_MIDI_STREAM_READ(packet, len) tud_midi_stream_read(packet, len)
-#define TINYUSB_MIDI_STREAM_AVAILABLE() tud_midi_available()
-#endif
+
+
+
 
 void MIDIInputUSB::process() {
     uint8_t packet[4];
 
-    while (TINYUSB_MIDI_STREAM_AVAILABLE()) {
-        TINYUSB_MIDI_STREAM_READ(packet, 3);
+    //tud_midi_available()
+    while ( tud_midi_available()  ) {
+        tud_midi_stream_read(packet, 3);
+
         #ifdef DEBUG_MIDI
         printf("%02X %02X %02X %02X\n", packet[0], packet[1], packet[2], packet[3]);
         #endif

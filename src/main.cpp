@@ -12,6 +12,7 @@
 #include "audio_subsystem.h"
 #include "picoadk_hw.h"
 
+
 #include "FreeRTOS.h"
 #include <task.h>
 #include <queue.h>
@@ -20,6 +21,16 @@
 
 // Audio Buffer (Size is set in lib/audio/include/audio_subsystem.h)
 audio_buffer_pool_t *audio_pool;
+
+#include "Heavy_prog.hpp"
+Heavy_prog pd_prog(SAMPLE_RATE);
+
+float smp[2];
+
+
+#if (USE_USB_MIDI_HOST == 1)
+static uint8_t midi_dev_addr = 0;
+#endif
 
 MIDIInputUSB usbMIDI;
 
@@ -61,7 +72,7 @@ extern "C" {
         while (1)
         {
             // TinyUSB Device Task
-            #if (OPT_MODE_HOST == 1)
+            #if (USE_USB_MIDI_HOST == 1)
             tuh_task();
             #else
             tud_task();
@@ -97,6 +108,7 @@ extern "C" {
         picoadk_init();
 
         // Initialize DSP engine (if needed)
+        
 
         // Initialize the audio subsystem
         audio_pool = init_audio();
@@ -111,7 +123,7 @@ extern "C" {
         // Idle loop (this is fine for Cortex-M33)
         while (1)
         {
-            // Could use `taskYIELD()` or similar here if needed
+            __wfi();
         }
     }
 
@@ -134,8 +146,10 @@ extern "C" {
         // Fill buffer with 32-bit samples (stereo, 2 channels)
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
-            samples[i * 2 + 0] = 0;   // Left channel sample
-            samples[i * 2 + 1] = 0;   // Right channel sample
+            pd_prog.processInlineInterleaved(smp, smp, 1);
+
+            samples[i * 2 + 0] = float_to_int32(smp[0]);   // Left channel sample
+            samples[i * 2 + 1] = float_to_int32(smp[1]);   // Right channel sample
             // Use your DSP function here for generating the audio samples
         }
 
