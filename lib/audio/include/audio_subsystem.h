@@ -2,7 +2,7 @@
 #define __AUDIO_SUBSYSTEM_H__
 
 
-#define SAMPLES_PER_BUFFER 32 // Samples / channel
+#define SAMPLES_PER_BUFFER 64 // Samples / channel
 
 #define USE_AUDIO_I2S 1
 #include "audio_i2s.h"
