@@ -3,13 +3,9 @@
 
 void picoadk_init()
 {
-        #if PICO_RP2040
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(402000, true);
-        #else
-        #warning "No overclocking will performed, as this is untested on plaftorms other than the RP2040."
-        #endif
+        set_sys_clock_khz(300000, true);
 
         // Initialize TinyUSB
         board_init();

@@ -34,6 +34,36 @@ static uint8_t midi_dev_addr = 0;
 
 MIDIInputUSB usbMIDI;
 
+#define HV_HASH_NOTEIN          0x67E37CA3
+#define HV_HASH_CTLIN           0x41BE0f9C
+#define HV_HASH_POLYTOUCHIN     0xBC530F59
+#define HV_HASH_PGMIN           0x2E1EA03D
+#define HV_HASH_TOUCHIN         0x553925BD
+#define HV_HASH_BENDIN          0x3083F0F7
+#define HV_HASH_MIDIIN          0x149631bE
+#define HV_HASH_MIDIREALTIMEIN  0x6FFF0BCF
+
+#define HV_HASH_NOTEOUT         0xD1D4AC2
+#define HV_HASH_CTLOUT          0xE5e2A040
+#define HV_HASH_POLYTOUCHOUT    0xD5ACA9D1
+#define HV_HASH_PGMOUT          0x8753E39E
+#define HV_HASH_TOUCHOUT        0x476D4387
+#define HV_HASH_BENDOUT         0xE8458013
+#define HV_HASH_MIDIOUT         0x6511DE55
+#define HV_HASH_MIDIOUTPORT     0x165707E4
+
+#define MIDI_RT_CLOCK           0xF8
+#define MIDI_RT_START           0xFA
+#define MIDI_RT_CONTINUE        0xFB
+#define MIDI_RT_STOP            0xFC
+#define MIDI_RT_ACTIVESENSE     0xFE
+#define MIDI_RT_RESET           0xFF
+
+// TODO - implement MIDI CLOCK 
+//      - Pitch bend
+//      - Aftertouch      
+//      - Program Change
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,25 +78,25 @@ extern "C" {
         // Setup MIDI Callbacks using lambdas
         usbMIDI.setCCCallback([](uint8_t cc, uint8_t value, uint8_t channel) {
             // Handle Control Change (CC) event
-            // e.g. Dsp_cc(ctx, cc, value, channel);
+            pd_prog.sendMessageToReceiverV(HV_HASH_CTLIN, 0, "fff", (float)value, (float)cc, (float)channel);
         });
 
         usbMIDI.setNoteOnCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
             if (velocity > 0)
             {
+                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
                 // Handle Note On event
-                // e.g. Dsp_noteOn(ctx, note, channel);
             }
             else
             {
+                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
                 // Treat zero velocity as Note Off
-                // e.g. Dsp_noteOff(ctx, note, channel);
             }
         });
 
         usbMIDI.setNoteOffCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
+            pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
             // Handle Note Off event
-            // e.g. Dsp_noteOff(ctx, note, channel);
         });
 
         while (1)
