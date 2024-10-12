@@ -126,6 +126,7 @@ extern "C" {
             gpio_put(2, 1);
             vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
             gpio_put(2, 0);
+            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
         }
     }
 
