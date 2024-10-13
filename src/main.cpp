@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "project_config.h"
 
+// Reverse compatibility with old PicoSDK.
 #if __has_include("bsp/board_api.h")
 #include "bsp/board_api.h"
 #else
@@ -9,8 +10,8 @@
 
 #include "midi_input_usb.h"
 #include "audio_subsystem.h"
-#include "vult.h"
 #include "picoadk_hw.h"
+
 
 #include "FreeRTOS.h"
 #include <task.h>
@@ -18,232 +19,175 @@
 
 #include "arduino_compat.h"
 
-#define USE_DIN_MIDI 0
-#define DEBUG_MIDI 0
+// Audio Buffer (Size is set in lib/audio/include/audio_subsystem.h)
+audio_buffer_pool_t *audio_pool;
 
-// Set to 0 if you want to play notes via USB MIDI
-#define PLAY_RANDOM_NOTES 1
+#include "Heavy_prog.hpp"
+Heavy_prog pd_prog(SAMPLE_RATE);
 
-audio_buffer_pool_t *ap;
-Dsp_process_type ctx;
+float smp[2];
 
-MIDIInputUSB usbmidi;
+
+#if (USE_USB_MIDI_HOST == 1)
+static uint8_t midi_dev_addr = 0;
+#endif
+
+MIDIInputUSB usbMIDI;
+
+// TODO : move macros out of here
+
+#define HV_HASH_NOTEIN          0x67E37CA3
+#define HV_HASH_CTLIN           0x41BE0f9C
+#define HV_HASH_POLYTOUCHIN     0xBC530F59
+#define HV_HASH_PGMIN           0x2E1EA03D
+#define HV_HASH_TOUCHIN         0x553925BD
+#define HV_HASH_BENDIN          0x3083F0F7
+#define HV_HASH_MIDIIN          0x149631bE
+#define HV_HASH_MIDIREALTIMEIN  0x6FFF0BCF
+
+#define HV_HASH_NOTEOUT         0xD1D4AC2
+#define HV_HASH_CTLOUT          0xE5e2A040
+#define HV_HASH_POLYTOUCHOUT    0xD5ACA9D1
+#define HV_HASH_PGMOUT          0x8753E39E
+#define HV_HASH_TOUCHOUT        0x476D4387
+#define HV_HASH_BENDOUT         0xE8458013
+#define HV_HASH_MIDIOUT         0x6511DE55
+#define HV_HASH_MIDIOUTPORT     0x165707E4
+
+#define MIDI_RT_CLOCK           0xF8
+#define MIDI_RT_START           0xFA
+#define MIDI_RT_CONTINUE        0xFB
+#define MIDI_RT_STOP            0xFC
+#define MIDI_RT_ACTIVESENSE     0xFE
+#define MIDI_RT_RESET           0xFF
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    volatile long dsp_start;
-    volatile long dsp_end;
-
-    // This task prints the statistics about the running FreeRTOS tasks
-    // and how long it takes for the I2S callback to run.
-    void print_task(void *p)
-    {
-        char ptrTaskList[2048];
-        while (1)
-        {
-            vTaskList(ptrTaskList);
-            printf("\033[2J");
-            printf("\033[0;0HTask\t\tState\tPrio\tStack\tNum\n%s\n", ptrTaskList);
-            printf("======================================================\n");
-            printf("B = Blocked, R = Ready, D = Deleted, S = Suspended\n");
-            printf("Milliseconds since boot: %d\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
-            printf("dsp task took %d uS\n", dsp_end - dsp_start);
-            watchdog_update();
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
-    }
-
-    // MIDI callbacks
-    void note_on_callback(uint8_t note, uint8_t level, uint8_t channel)
-    {
-        if (level > 0)
-        {
-            Dsp_noteOn(ctx, note, level, channel);
-            gpio_put(15, 1);
-#if DEBUG_MIDI
-            printf("note on (ch %d): %d %d\n", channel, note, level);
-#endif
-        }
-        else
-        {
-            Dsp_noteOff(ctx, note, channel);
-            gpio_put(15, 0);
-#if DEBUG_MIDI
-            printf("note off (ch %d): %d %d\n", channel, note, level);
-#endif
-        }
-    }
-
-    void note_off_callback(uint8_t note, uint8_t level, uint8_t channel)
-    {
-        Dsp_noteOff(ctx, note, channel);
-        gpio_put(15, 0);
-#if DEBUG_MIDI
-        printf("note off (ch %d): %d %d\n", channel, note, level);
-#endif
-    }
-
-    void cc_callback(uint8_t cc, uint8_t value, uint8_t channel)
-    {
-        Dsp_controlChange(ctx, cc, value, channel);
-#if DEBUG_MIDI
-        printf("cc (ch %d): %d %d\n", channel, cc, value);
-#endif
-    }
-
-    // This task processes the USB MIDI input
+    /**
+     * Task to handle USB MIDI input processing.
+     *
+     * @param pvParameters Unused task parameters
+     */
     void usb_midi_task(void *pvParameters)
     {
-        usbmidi.setCCCallback(cc_callback);
-        usbmidi.setNoteOnCallback(note_on_callback);
-        usbmidi.setNoteOffCallback(note_off_callback);
+        // Setup MIDI Callbacks using lambdas
+        usbMIDI.setCCCallback([](uint8_t cc, uint8_t value, uint8_t channel) {
+            // Handle Control Change (CC) event
+            pd_prog.sendMessageToReceiverV(HV_HASH_CTLIN, 0, "fff", (float)value, (float)cc, (float)channel);
+        });
+
+        usbMIDI.setNoteOnCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
+            if (velocity > 0)
+            {
+                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
+                // Handle Note On event
+            }
+            else
+            {
+                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
+                // Treat zero velocity as Note Off
+            }
+        });
+
+        usbMIDI.setNoteOffCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
+            pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
+            // Handle Note Off event
+        });
+
+        usbMIDI.setClockCallback([]() {
+            // Handle MIDI Clock event
+            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "ff", (float)MIDI_RT_CLOCK);
+        });
 
         while (1)
         {
+            // TinyUSB Device Task
+            #if (USE_USB_MIDI_HOST == 1)
+            tuh_task();
+            #else
             tud_task();
-            usbmidi.process();
+            #endif
+            usbMIDI.process();
         }
     }
 
-    // This task blinks the LEDs on GPIO 2-5
+    /**
+     * Task to blink an LED on GPIO pin 2.
+     *
+     * @param pvParameters Unused task parameters
+     */
     void blinker_task(void *pvParameters)
     {
-        // set gpio 2-5 and 15 as outputs
-        for (int i = 2; i < 6; i++)
-        {
-            gpio_init(i);
-            gpio_set_dir(i, GPIO_OUT);
-        }
+        gpio_init(2);
+        gpio_set_dir(2, GPIO_OUT);
 
         while (1)
         {
-            // chase leds on gpio 2-5
-            for (int i = 2; i < 6; i++)
-            {
-                gpio_put(i, 1);
-                vTaskDelay(pdMS_TO_TICKS(100));
-                gpio_put(i, 0);
-            }
+            gpio_put(2, 1);
+            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
+            gpio_put(2, 0);
+            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
         }
     }
 
-
-    // This tasks generates random notes and plays them.
-    // It is only used if PLAY_RANDOM_NOTES is set to 1.
-    void play_task(void *pvParameters)
-    {
-        while (1)
-        {
-            uint8_t lydianScale[7] = {0, 2, 4, 6, 7, 9, 11};
-            uint8_t noteArray[16];
-            uint8_t velocityArray[16];
-            bool restArray[16];
-            uint8_t noteLengthArray[16];
-
-            for (int i = 0; i < 16; i++)
-            {
-                uint8_t randomOctave = rand() % 3;
-                noteArray[i] = (lydianScale[rand() % 7] + 60 - 12) + randomOctave * 12;
-                velocityArray[i] = 64 + rand() % 63;
-                restArray[i] = rand() % 2;
-                noteLengthArray[i] = 50 + (rand() % 50);
-            }
-
-            uint8_t noteInterval = 100;
-
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 16; j++)
-                {
-                    if (!restArray[j])
-                    {
-                        note_on_callback(noteArray[j], velocityArray[j], 0);
-                        vTaskDelay(pdMS_TO_TICKS(noteInterval));
-                        note_off_callback(noteArray[j], velocityArray[j], 0);
-                        vTaskDelay(pdMS_TO_TICKS(noteInterval));
-                    }
-                    else
-                    {
-                        vTaskDelay(pdMS_TO_TICKS(noteInterval * 2));
-                    }
-                }
-            }
-        }
-    }
-
+    /**
+     * Main entry point.
+     */
     int main(void)
     {
-        // initialize the hardware
+        // Initialize hardware
         picoadk_init();
 
-        // Initialize Vult DSP context.
-        Dsp_process_init(ctx);
-        Dsp_default_init(ctx);
-        Dsp_default(ctx);
+        // Initialize DSP engine (if needed)
+        
 
         // Initialize the audio subsystem
-        ap = init_audio();
+        audio_pool = init_audio();
 
-        // Create FreeRTOS Tasks for USB MIDI and printing statistics
-        xTaskCreate(usb_midi_task, "USBMIDI", 4096, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(print_task, "TASKLIST", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
-        xTaskCreate(blinker_task, "BLINKER", 128, NULL, configMAX_PRIORITIES - 1, NULL);
-#if PLAY_RANDOM_NOTES
-        xTaskCreate(play_task, "PLAY", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
-#endif
+        // Create FreeRTOS tasks for MIDI handling and LED blinking
+        xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
+        xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, NULL);
 
-        // Start the scheduler.
+        // Start the FreeRTOS scheduler
         vTaskStartScheduler();
 
-        // Idle loop.
+        // Idle loop (this is fine for Cortex-M33)
         while (1)
         {
-            ;
-            ;
+            __wfi();
         }
     }
 
-    // This fis the I2S callback function. It is called when the I2S subsystem
-    // needs more audio data. It is called at a fixed rate of 48kHz.
-    // The audio data is stored in the audio_buffer_t struct.
+    /**
+     * I2S audio callback for filling the audio buffer with samples.
+     *
+     * This function is called at a fixed rate determined by the audio subsystem
+     * and must return within the interval between calls to avoid audio glitches.
+     */
     void __not_in_flash_func(i2s_callback_func())
     {
-        audio_buffer_t *buffer = take_audio_buffer(ap, false);
+        audio_buffer_t *buffer = take_audio_buffer(audio_pool, false);
         if (buffer == NULL)
         {
             return;
         }
+
         int32_t *samples = (int32_t *)buffer->buffer->bytes;
 
-        dsp_start = to_us_since_boot(get_absolute_time());
-
-        // convert 12-bit adc value to 16-bit signed int
-        // todo: use vult external function to read adcs instead
-        uint32_t cv0 = adc128_read(0) * 16;
-        uint32_t cv1 = rev_log_scale(adc128_read(1)) * 16;
-        uint32_t cv2 = adc128_read(2) * 16;
-        uint32_t cv3 = adc128_read(3) * 16;
-
-        // We are filling the buffer with 32-bit samples (2 channels)
+        // Fill buffer with 32-bit samples (stereo, 2 channels)
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
-            // smp should be the output of your processing code.
-            // In case of the Vult Example, this is Dsp_process(ctx);
-            Dsp_process(ctx, cv0, cv1, cv2, cv3);
-            fix16_t left_out = Dsp_process_ret_0(ctx);
-            fix16_t right_out = Dsp_process_ret_1(ctx);
-            samples[i * 2 + 0] = fix16_to_int32(left_out);  // LEFT
-            samples[i * 2 + 1] = fix16_to_int32(right_out); // RIGHT
+            pd_prog.processInlineInterleaved(smp, smp, 1);
+
+            samples[i * 2 + 0] = float_to_int32(smp[0]);   // Left channel sample
+            samples[i * 2 + 1] = float_to_int32(smp[1]);   // Right channel sample
+            // Use your DSP function here for generating the audio samples
         }
 
-        dsp_end = to_us_since_boot(get_absolute_time());
-
         buffer->sample_count = buffer->max_sample_count;
-        give_audio_buffer(ap, buffer);
-        return;
+        give_audio_buffer(audio_pool, buffer);
     }
 
 #ifdef __cplusplus

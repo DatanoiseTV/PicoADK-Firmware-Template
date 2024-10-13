@@ -3,3 +3,7 @@ build/*
 *.bin
 *.elf
 .vscode
+.DS_Store
+compile_commands.json
+tags
+.cache
