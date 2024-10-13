@@ -130,8 +130,8 @@
 #define CFG_TUD_HID               0
 #define CFG_TUD_MIDI              1
 #define CFG_TUD_VENDOR            0
-#define CFG_TUD_ECM_RNDIS     USE_ECM
-#define CFG_TUD_NCM           (1 - CFG_TUD_ECM_RNDIS)
+#define USE_ECM 1  // Enable USB Ethernet (ECM/RNDIS)
+#define CFG_TUD_ECM_RNDIS USE_ECM
 
 #define CFG_TUH_MIDI              CFG_TUD_MIDI
 

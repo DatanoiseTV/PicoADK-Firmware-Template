@@ -307,6 +307,20 @@ void tud_network_init_cb(void) {
         }
     }
 
+    void usb_eth_task(void *pvParam){
+
+ /* initialize lwip, dhcp-server, dns-server, and http */
+  init_lwip();
+  while (!netif_is_up(&netif_data));
+  while (dhserv_init(&dhcp_config) != ERR_OK);
+  while (dnserv_init(IP_ADDR_ANY, 53, dns_query_proc) != ERR_OK);
+  httpd_init();
+
+  while(1){
+            service_traffic();
+  }
+    }
+
     /**
      * Main entry point.
      */
@@ -323,18 +337,13 @@ void tud_network_init_cb(void) {
 
         // Create FreeRTOS tasks for MIDI handling and LED blinking
         xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
+        xTaskCreate(usb_eth_task, "Ethernet", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, &usb_task_handle);
         vTaskCoreAffinitySet(usb_task_handle, (1 << 1));
 
         // Start the FreeRTOS scheduler
         vTaskStartScheduler();
 
- /* initialize lwip, dhcp-server, dns-server, and http */
-  init_lwip();
-  while (!netif_is_up(&netif_data));
-  while (dhserv_init(&dhcp_config) != ERR_OK);
-  while (dnserv_init(IP_ADDR_ANY, 53, dns_query_proc) != ERR_OK);
-  httpd_init();
 
 #ifdef INCLUDE_IPERF
   // test with: iperf -c 192.168.7.1 -e -i 1 -M 5000 -l 8192 -r
@@ -344,8 +353,8 @@ void tud_network_init_cb(void) {
         // Idle loop (this is fine for Cortex-M33)
         while (1)
         {
-            service_traffic();
-            __wfi();
+
+            //__wfi();
         }
     }
 

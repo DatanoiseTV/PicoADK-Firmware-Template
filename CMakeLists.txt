@@ -70,6 +70,7 @@ add_executable(main
     src/get_serial.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dhserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dnserver.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/rndis_reports.c
     # src/psram.cpp
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
 )
