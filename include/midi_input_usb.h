@@ -26,7 +26,7 @@ private:
     std::function<void(uint16_t, uint8_t)> MIDIPitchBendCallback = nullptr;
     std::function<void(uint8_t, uint8_t)> MIDIAftertouchCallback = nullptr;
     std::function<void(uint8_t, uint8_t)> MIDIChannelPressureCallback = nullptr;
-    std::function<void(uint8_t, uint8_t)> MIDIClockCallback = nullptr;
+    std::function<void()> MIDIClockCallback = nullptr;
 
     // Helper function for parsing pitch bend data
     uint16_t parsePitchBend(const uint8_t* packet);
