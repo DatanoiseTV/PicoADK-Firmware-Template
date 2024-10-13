@@ -96,6 +96,11 @@ extern "C" {
             // Handle Note Off event
         });
 
+        usbMIDI.setClockCallback([]() {
+            // Handle MIDI Clock event
+            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "f", (float)MIDI_RT_CLOCK);
+        });
+
         while (1)
         {
             // TinyUSB Device Task

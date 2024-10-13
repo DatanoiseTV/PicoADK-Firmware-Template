@@ -43,6 +43,11 @@ extern "C" {
 #pragma mark - Heavy Context
 #endif
 
+typedef enum {
+  HV_PROG_PARAM_IN_DETUNE = 0x3861AA6D, // detune
+  HV_PROG_PARAM_IN_FREQ = 0x345FC008, // freq
+  HV_PROG_PARAM_IN_OSCFREQ = 0x204E6574, // oscFreq
+} Hv_prog_ParameterIn;
 
 
 /**
