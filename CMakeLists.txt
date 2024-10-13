@@ -18,12 +18,12 @@ else()
 endif()
 
 # Define values for the placeholders
-set(FLASH_LENGTH 4M)      # Example value for FLASH length
-set(PSRAM_LENGTH 8M)      # Example value for PSRAM length
-set(RAM_LENGTH 520K)        # Example value for RAM length
-set(EEPROM_START 0x1FFF000) # Example EEPROM start address
-set(FS_START 0x08080000)    # Example file system start address
-set(FS_END 0x080C0000)      # Example file system end address
+set(PICO_FLASH_LENGTH "4194304")  # 4MB
+set(PICO_EEPROM_START "272621568")
+set(FS_START "272621568")
+set(FS_END "272621568")
+set(RAM_LENGTH "520K")  # Example value for RAM length
+set(PSRAM_LENGTH "8388608")  # 8MB
 
 set(DSP_SAMPLE_RATE 48000)
 
@@ -68,7 +68,7 @@ add_executable(main
     src/picoadk_hw.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
-    src/psram.cpp
+    #src/psram.cpp
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
 )
 
@@ -140,6 +140,7 @@ target_compile_definitions(main PRIVATE
     USE_USB_MIDI_HOST=0
     SAMPLE_RATE=${DSP_SAMPLE_RATE}
     RP2350_PSRAM_CS=0
+    
 )
 
 target_compile_definitions(Audio PRIVATE
@@ -147,10 +148,10 @@ target_compile_definitions(Audio PRIVATE
 )
 
 # Configure the linker script with actual values
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in  # Input template file
-    ${CMAKE_CURRENT_BINARY_DIR}/default.ld     # Output linker script file
-    @ONLY                                      # Use only @var@ style placeholders
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/default.ld
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tools ${CMAKE_COMMAND} -E env python3 ${CMAKE_CURRENT_SOURCE_DIR}/tools/simplesub.py ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in ${CMAKE_CURRENT_BINARY_DIR}/default.ld __FLASH_LENGTH__ ${FLASH_LENGTH} __EEPROM_START__ ${EEPROM_START} __FS_START__ ${FS_START} __FS_END__ ${FS_END} __RAM_LENGTH__ ${RAM_LENGTH} __PSRAM_LENGTH__ ${PSRAM_LENGTH}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in ${CMAKE_CURRENT_SOURCE_DIR}/tools/simplesub.py
 )
 
 # Set the linker script to use the custom default.ld
@@ -169,12 +170,13 @@ endforeach()
 
 add_compile_options("-Wall" "-Wredundant-decls")
 
-if (PICO_PLATFORM STREQUAL "rp2040")
-    pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
-    target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
-    pico_set_boot_stage2(main slower_boot2)
-else()
-    message("Skipping slower_boot2 as PICO_PLATFORM is not rp2040")
-endif()
+
+#if (PICO_PLATFORM STREQUAL "rp2040")
+#    pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
+#    target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)
+#    pico_set_boot_stage2(main slower_boot2)
+#else()
+#    message("Skipping slower_boot2 as PICO_PLATFORM is not rp2040")
+#endif()
 
 pico_add_extra_outputs(main)

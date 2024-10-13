@@ -16,6 +16,7 @@
 #include "hardware/vreg.h"
 #include "hardware/structs/rosc.h"
 #include "helper.h"
+#include "psram.h"
 
 #if __has_include("bsp/board_api.h")
 #include "bsp/board_api.h"

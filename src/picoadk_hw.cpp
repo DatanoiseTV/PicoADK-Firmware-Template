@@ -3,9 +3,9 @@
 
 void picoadk_init()
 {
-        vreg_set_voltage(VREG_VOLTAGE_1_30);
-        sleep_ms(1);
-        set_sys_clock_khz(300000, true);
+        //vreg_set_voltage(VREG_VOLTAGE_1_30);
+        //sleep_ms(1);
+        //set_sys_clock_khz(300000, true);
 
         // Initialize TinyUSB
         board_init();
