@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# copy pd source to /tmp/pd or /tmp/$1 in preparation for releasing it or
+# for a test compile.
+
+if test x$1 == x
+then
+    TARGET=pd
+else
+    TARGET=$1
+fi
+
+cd ..
+TMPPD=/tmp/$TARGET
+echo TEMP $TMPPD
+rm -rf $TMPPD
+mkdir $TMPPD
+cp -pR README.txt LICENSE.txt INSTALL.txt Makefile.am autogen.sh configure.ac \
+    src tcl doc extra man  portaudio portmidi asio po m4 pd.pc.in $TMPPD

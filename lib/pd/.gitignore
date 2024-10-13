@@ -1,0 +1,90 @@
+# binaries
+bin
+src/pd
+src/pd-watchdog
+src/pdreceive
+src/pdsend
+*.app
+*.exe
+
+# autotools
+autom4te.cache
+Makefile
+Makefile.in
+GNUmakefile
+GNUmakefile.in
+aclocal.m4
+configure
+config.log
+config.status
+libtool
+m4/generated
+m4/config
+makefile.dependencies
+dist
+tags
+tcl/pd-gui
+
+# build
+*.o
+*.obj
+lib*.a
+
+# libtool
+.deps
+.libs
+*.lo
+*.la
+
+# externals
+*.pd_*
+*.d_fat
+*.d_fat_o
+*.dll
+*.so
+
+# windows build artifacts
+src/*.com
+src/*.def
+src/*.lib
+src/*.res
+src/*.a
+
+# mac build artifacts
+*.dylib
+
+# distribution tarballs
+pd-0.*
+msw/0.*
+msw/pdprototype/*
+
+# gettext
+po/*.msg
+po/*.po~
+
+# emacs tags
+TAGS
+
+# asio sdk
+ASIOSDK
+
+# pkgconfig
+pd.pc
+
+# portaudio configure
+portaudio/portaudio/bin-stamp
+portaudio/portaudio/lib-stamp
+portaudio/portaudio/ltmain.sh
+portaudio/portaudio/portaudio-2.0.pc
+*.dirstamp
+
+# macOS
+.DS_Store
+
+# script build artifacts
+mac/build
+
+# libpd
+!libpd/Makefile
+!libpd/test_libpd/Makefile
+libpd/test_libpd/test_libpd

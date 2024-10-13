@@ -32,8 +32,8 @@
 // Audio Buffer (Size is set in lib/audio/include/audio_subsystem.h)
 audio_buffer_pool_t *audio_pool;
 
-#include "Heavy_prog.hpp"
-Heavy_prog pd_prog(SAMPLE_RATE);
+
+#include <pdmain.h>
 
 float smp[2];
 
@@ -43,6 +43,10 @@ static uint8_t midi_dev_addr = 0;
 
 MIDIInputUSB usbMIDI;
 TaskHandle_t usb_task_handle;
+
+#define IOCHANS 1
+#define BLKSIZE 64
+float soundin[IOCHANS * BLKSIZE], soundout[IOCHANS * BLKSIZE];
 
 // TODO : move macros out of here
 
@@ -75,6 +79,7 @@ TaskHandle_t usb_task_handle;
 extern "C"
 {
 #endif
+
 
     // IP
 
@@ -259,46 +264,7 @@ extern "C"
      */
     void usb_midi_task(void *pvParameters)
     {
-        // Setup MIDI Callbacks using lambdas
-        usbMIDI.setCCCallback([](uint8_t cc, uint8_t value, uint8_t channel)
-                              {
-            // Handle Control Change (CC) event
-            pd_prog.sendMessageToReceiverV(HV_HASH_CTLIN, 0, "fff", (float)value, (float)cc, (float)channel); });
 
-        usbMIDI.setNoteOnCallback([](uint8_t note, uint8_t velocity, uint8_t channel)
-                                  {
-            if (velocity > 0)
-            {
-                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
-                // Handle Note On event
-            }
-            else
-            {
-                pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
-                // Treat zero velocity as Note Off
-            } });
-
-        usbMIDI.setNoteOffCallback([](uint8_t note, uint8_t velocity, uint8_t channel)
-                                   {
-                                       pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
-                                       // Handle Note Off event
-                                   });
-
-        usbMIDI.setClockCallback([]()
-                                 {
-            // Handle MIDI Clock event
-            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "f", (float)MIDI_RT_CLOCK); });
-
-        while (1)
-        {
-// TinyUSB Device Task
-#if (USE_USB_MIDI_HOST == 1)
-            tuh_task();
-#else
-        tud_task();
-#endif
-            usbMIDI.process();
-        }
     }
 
     /**
@@ -367,6 +333,7 @@ extern "C"
 
         while (1)
         {
+            
             service_traffic();
         }
     }
@@ -383,12 +350,13 @@ extern "C"
 
         // Initialize the audio subsystem
         audio_pool = init_audio();
+        pdmain_init();
 
         // Create FreeRTOS tasks for MIDI handling and LED blinking
-        xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(usb_eth_task, "Ethernet", 8192, NULL, configMAX_PRIORITIES, NULL);
+        //xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
+       // xTaskCreate(usb_eth_task, "Ethernet", 8192, NULL, configMAX_PRIORITIES, NULL);
         xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, &usb_task_handle);
-        vTaskCoreAffinitySet(usb_task_handle, (1 << 1));
+        //vTaskCoreAffinitySet(usb_task_handle, (1 << 1));
 
         // Start the FreeRTOS scheduler
         vTaskStartScheduler();
@@ -401,7 +369,7 @@ extern "C"
         // Idle loop (this is fine for Cortex-M33)
         while (1)
         {
-
+  // pdmain_tick();
             //__wfi();
         }
     }
@@ -421,14 +389,15 @@ extern "C"
         }
 
         int32_t *samples = (int32_t *)buffer->buffer->bytes;
-
+       
         // Fill buffer with 32-bit samples (stereo, 2 channels)
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
-            pd_prog.processInlineInterleaved(smp, smp, 1);
-
-            samples[i * 2 + 0] = float_to_int32(smp[0]); // Left channel sample
-            samples[i * 2 + 1] = float_to_int32(smp[1]); // Right channel sample
+            //pd_prog.processInlineInterleaved(smp, smp, 1);
+            float smp = soundout[i];
+ 
+            samples[i * 2 + 0] = float_to_int32(smp); //float_to_int32(smp); // Left channel sample
+            samples[i * 2 + 1] = float_to_int32(smp); // Right channel sample
             // Use your DSP function here for generating the audio samples
         }
 

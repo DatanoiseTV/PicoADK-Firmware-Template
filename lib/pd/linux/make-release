@@ -1,0 +1,20 @@
+#!/bin/sh
+#usage: ./make-release <version>
+if test x$1 == x
+then
+   echo usage: ./make-release 0.34-0 or 0.35-0test11 or ...
+   exit 1
+fi
+
+# set -x
+cd ..
+ROOTDIR=`pwd`
+find . \( -name ".[azA-Z]*" \! -name ".git" \
+    -o -name "core" -o -name "*.cache" -o -name "*.orig" \) \
+    -ok rm -r {} \;
+
+git status
+git archive --prefix=pd-$1/ HEAD | gzip > /tmp/pd-$1.src.tar.gz
+mv -i /tmp/pd-$1.src.tar.gz $ROOTDIR/dist/ && \
+ls -l $ROOTDIR/dist/pd-$1.src.tar.gz
+

@@ -21,6 +21,28 @@
     "nrf-connect.topdir": "/home/syso/dev/ztry",
     "nrf-connect.toolchain.path": "PATH",
     "files.associations": {
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "__tree": "c",
+        "array": "c",
+        "bitset": "c",
+        "deque": "c",
+        "initializer_list": "c",
+        "list": "c",
+        "map": "c",
+        "queue": "c",
+        "regex": "c",
+        "set": "c",
+        "span": "c",
+        "stack": "c",
+        "string": "c",
+        "string_view": "c",
+        "unordered_map": "c",
+        "valarray": "c",
+        "vector": "c",
+        "random": "c",
+        "*.ipp": "c",
+        "types.h": "c"
     }
 }

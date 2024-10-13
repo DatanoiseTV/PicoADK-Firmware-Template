@@ -55,7 +55,7 @@
 
 #define LWIP_HTTPD_CGI                  1
 #define LWIP_HTTPD_SSI                  1
-#define LWIP_HTTPD_SSI_INCLUDE_TAG      0
+#define LWIP_HTTPD_SSI_INCLUDE_TAG      1
 
 #define LWIP_SINGLE_NETIF               1
 

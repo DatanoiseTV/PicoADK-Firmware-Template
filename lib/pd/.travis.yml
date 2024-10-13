@@ -1,0 +1,2 @@
+import:
+  source: pure-data/pure-data-ci:travis-ci/travis-ci.yml@main

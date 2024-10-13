@@ -1,6 +1,8 @@
 #ifndef __ARDUINO_COMPAT_H__
 #define __ARDUINO_COMPAT_H__
 
+
+#if 0
 #include "picoadk_hw.h"
 
 // Basic Arduino compatibility layer
@@ -41,5 +43,7 @@ static inline uint16_t analogRead(uint8_t pin)
     sleep_ms(1);
     return adc_read();
 }
+
+#endif
 
 #endif // __ARDUINO_COMPAT_H__

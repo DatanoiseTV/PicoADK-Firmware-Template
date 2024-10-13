@@ -1,0 +1,7 @@
+#define PD
+#define HAVE_UNISTD_H
+#define HAVE_ALLOCA_H
+#define PD_HEADLESS
+#define SYMTABHASHSIZE 512
+#define STUPID_SORT
+#define SSIZE_MAX INT_MAX

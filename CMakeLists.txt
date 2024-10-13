@@ -46,7 +46,7 @@ else()
 endif()
 
 add_subdirectory(lib/oled)
-add_subdirectory(lib/heavy)
+add_subdirectory(lib/pd)
 
 # Set the real flag based on the PICO_PLATFORM variable
 if (DEFINED PICO_PLATFORM AND PICO_PLATFORM STREQUAL "rp2350-arm-s")
@@ -68,6 +68,7 @@ add_executable(main
     src/picoadk_hw.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
+    src/pdmain.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dhserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dnserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/rndis_reports.c
@@ -108,8 +109,8 @@ if (USE_PRECOMPILED_LIBS)
         tinyusb_board
         audio
         FreeRTOS-Kernel
-        heavy
         lwip
+        PD
     )
 else()
     target_link_libraries(main
@@ -134,8 +135,8 @@ else()
         tinyusb_board
         Audio
         FreeRTOS-Kernel
-        heavy
         lwip
+        PD
     )
 endif()
 

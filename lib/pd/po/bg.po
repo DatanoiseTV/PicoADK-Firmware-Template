@@ -1,0 +1,2161 @@
+# Bulgarian translation of Pure Data
+# This file is put in the public domain.
+# Rostislav Raykov <zbrox@i-space.org>, 2005.
+# Max Neupert <abonnements@revolwear.com>, 2022.
+msgid ""
+msgstr ""
+"Project-Id-Version: Pure Data 0.43\n"
+"Report-Msgid-Bugs-To: pd-dev@iem.at\n"
+"POT-Creation-Date: 2024-08-28 18:42+0200\n"
+"PO-Revision-Date: 2022-10-30 07:04+0000\n"
+"Last-Translator: Max Neupert <abonnements@revolwear.com>\n"
+"Language-Team: Bulgarian <https://hosted.weblate.org/projects/pure-data/pure-"
+"data/bg/>\n"
+"Language: bg\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.14.2-dev\n"
+
+msgid "linear"
+msgstr ""
+
+msgid "logarithmic"
+msgstr ""
+
+msgid "new-only"
+msgstr ""
+
+msgid "new&old"
+msgstr ""
+
+#, fuzzy
+msgid "no scale"
+msgstr "Запазване"
+
+#, fuzzy
+msgid "scale"
+msgstr "Запазване"
+
+#, tcl-format
+msgid "Discard changes to '%s'?"
+msgstr ""
+
+msgid "Undo clear"
+msgstr ""
+
+msgid "Undo connect"
+msgstr ""
+
+#, fuzzy
+msgid "Undo cut"
+msgstr "Уганда"
+
+msgid "Undo disconnect"
+msgstr ""
+
+#, fuzzy
+msgid "Undo duplicate"
+msgstr "Дата"
+
+msgid "Undo motion"
+msgstr ""
+
+msgid "Undo paste"
+msgstr ""
+
+msgid "Undo typing"
+msgstr ""
+
+msgid "Redo clear"
+msgstr ""
+
+msgid "Redo connect"
+msgstr ""
+
+#, fuzzy
+msgid "Redo cut"
+msgstr "Уганда"
+
+msgid "Redo disconnect"
+msgstr ""
+
+#, fuzzy
+msgid "Redo duplicate"
+msgstr "Дата"
+
+msgid "Redo motion"
+msgstr ""
+
+msgid "Redo paste"
+msgstr ""
+
+msgid "Redo typing"
+msgstr ""
+
+msgid "no Pd settings to clear"
+msgstr ""
+
+msgid "removed .pdsettings file"
+msgstr ""
+
+msgid "couldn't delete .pdsettings file"
+msgstr ""
+
+msgid "failed to erase Pd settings"
+msgstr ""
+
+msgid "erased Pd settings"
+msgstr ""
+
+msgid "no Pd settings to erase"
+msgstr ""
+
+msgid "skipping loading preferences... Pd seems to have crashed on startup"
+msgstr ""
+
+msgid "(re-save preferences to reinstate them)"
+msgstr ""
+
+msgid "File"
+msgstr "Файл"
+
+#, fuzzy
+msgid "Edit"
+msgstr "_Редактиране"
+
+msgid "Put"
+msgstr ""
+
+msgid "Find"
+msgstr "Търсене"
+
+#, fuzzy
+msgid "Media"
+msgstr "Македония"
+
+#, fuzzy
+msgid "Window"
+msgstr "Прозорец"
+
+msgid "Help"
+msgstr "Помощ"
+
+msgid "Show &Hidden Files and Directories"
+msgstr ""
+
+msgid "Copy"
+msgstr "Копиране"
+
+#, fuzzy
+msgid "Paste"
+msgstr "Дата"
+
+msgid "Array Properties"
+msgstr ""
+
+#, fuzzy
+msgid "Array"
+msgstr "Андора"
+
+msgid "Name:"
+msgstr "Име:"
+
+msgid "Size:"
+msgstr "Размер:"
+
+#, fuzzy
+msgid "Save contents"
+msgstr "_Потребителско ръководство"
+
+msgid "Draw as:"
+msgstr ""
+
+#, fuzzy
+msgid "Polygon"
+msgstr "Полша"
+
+#, fuzzy
+msgid "Points"
+msgstr "Порт"
+
+msgid "Bezier curve"
+msgstr ""
+
+msgid "Put array into:"
+msgstr ""
+
+msgid "New graph"
+msgstr ""
+
+#, fuzzy
+msgid "Last graph"
+msgstr "Последно съобщение: %s"
+
+msgid "Options"
+msgstr ""
+
+#, fuzzy
+msgid "Open List View..."
+msgstr "Списък със забранение адреси..."
+
+#, fuzzy
+msgid "Delete array"
+msgstr "Изтриване"
+
+msgid "Cancel"
+msgstr "Отмяна"
+
+msgid "Apply"
+msgstr "Прилагане"
+
+msgid "OK"
+msgstr ""
+
+msgid "no device"
+msgstr ""
+
+msgid "(same as input device)..."
+msgstr ""
+
+msgid "Channels:"
+msgstr "Отмяна:"
+
+msgid "Input Devices"
+msgstr ""
+
+msgid "Output Devices"
+msgstr ""
+
+msgid "Use Multiple Devices"
+msgstr ""
+
+msgid "Audio System"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Sample rate:"
+msgstr ""
+
+msgid "Delay (msec):"
+msgstr ""
+
+msgid "48k"
+msgstr ""
+
+msgid "44.1k"
+msgstr ""
+
+msgid "96k"
+msgstr ""
+
+msgid "Block size:"
+msgstr ""
+
+msgid "Use callbacks"
+msgstr ""
+
+msgid "Audio Settings"
+msgstr ""
+
+msgid "Save All Settings"
+msgstr ""
+
+msgid "WARNING: unknown graphme flags received in pdtk_canvas_dialog"
+msgstr ""
+
+msgid "Canvas Properties"
+msgstr ""
+
+#, fuzzy
+msgid "Scale"
+msgstr "Запазване"
+
+msgid "X units per pixel:"
+msgstr ""
+
+msgid "Y units per pixel:"
+msgstr ""
+
+msgid "Appearance on parent patch"
+msgstr ""
+
+msgid "Graph-On-Parent"
+msgstr ""
+
+msgid "Hide object name and arguments"
+msgstr ""
+
+msgid "Range and size"
+msgstr ""
+
+msgid "X range: from"
+msgstr ""
+
+msgid "to"
+msgstr ""
+
+#, fuzzy
+msgid "Margin:"
+msgstr "Отбелязваща линия:"
+
+msgid "Y range: from"
+msgstr ""
+
+msgid "Data Properties"
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+#, tcl-format
+msgid "Found '%1$s' in %2$s"
+msgstr ""
+
+#, tcl-format
+msgid "Couldn't find '%1$s' in %2$s"
+msgstr ""
+
+#, tcl-format
+msgid "Search in %s for:"
+msgstr "Търсене из %s текста:"
+
+#, tcl-format
+msgid "Showed last '%1$s' in %2$s"
+msgstr ""
+
+#, tcl-format
+msgid "Showing '%1$d' out of %2$d items in %3$s"
+msgstr ""
+
+#, fuzzy
+msgid "Pd window"
+msgstr "Прозореца за изпращане на файлове"
+
+msgid "Match whole word only"
+msgstr ""
+
+msgid "Close"
+msgstr "Затваряне"
+
+#, tcl-format
+msgid "%s Font"
+msgstr "%s Шрифт"
+
+msgid "Font"
+msgstr "Шрифт"
+
+#, fuzzy
+msgid "Font Size"
+msgstr "Размер"
+
+#, fuzzy
+msgid "Stretch"
+msgstr "Време на начало"
+
+msgid "X and Y"
+msgstr ""
+
+msgid "X only"
+msgstr ""
+
+msgid "Y only"
+msgstr ""
+
+msgid "GUI Box Properties"
+msgstr ""
+
+#, fuzzy
+msgid "Messages"
+msgstr "Съобщение"
+
+msgid "Send symbol:"
+msgstr ""
+
+msgid "Receive symbol:"
+msgstr "Прозореца за получване на файлове:"
+
+msgid "auto"
+msgstr ""
+
+msgid "Width:"
+msgstr ""
+
+#, fuzzy
+msgid "Limits"
+msgstr "Списъци"
+
+msgid "Lower:"
+msgstr ""
+
+msgid "Upper:"
+msgstr "Потребител:"
+
+msgid "Label"
+msgstr ""
+
+#, fuzzy
+msgid "Left"
+msgstr "Ляво"
+
+msgid "Right"
+msgstr "Дясно"
+
+msgid "Top"
+msgstr "Горе"
+
+msgid "Bottom"
+msgstr "Долу"
+
+msgid "Background color"
+msgstr "Цвят на фона"
+
+msgid "Foreground color"
+msgstr "цвят на преден план"
+
+#, fuzzy
+msgid "Label color"
+msgstr "Избор на цвят"
+
+#, fuzzy
+msgid "Bang"
+msgstr "Забрана"
+
+msgid "Flash Time (msec)"
+msgstr ""
+
+msgid "Min:"
+msgstr ""
+
+msgid "Max:"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle"
+msgstr "Того"
+
+msgid "Non Zero Value"
+msgstr ""
+
+msgid "Value:"
+msgstr ""
+
+#, fuzzy
+msgid "Number2"
+msgstr "$ Номер"
+
+msgid "Width (digits):"
+msgstr ""
+
+msgid "Height:"
+msgstr "Дясно:"
+
+msgid "Output Range"
+msgstr ""
+
+msgid "Log height:"
+msgstr ""
+
+msgid "Vslider"
+msgstr ""
+
+#, fuzzy
+msgid "Hslider"
+msgstr "Скрит"
+
+#, fuzzy
+msgid "Vradio"
+msgstr "Версия"
+
+msgid "Num cells:"
+msgstr ""
+
+msgid "Hradio"
+msgstr ""
+
+msgid "VU Meter"
+msgstr ""
+
+#, fuzzy
+msgid "Canvas"
+msgstr "Канада"
+
+msgid "Visible Rectangle (pix)"
+msgstr ""
+
+#, tcl-format
+msgid "%s Properties"
+msgstr ""
+
+msgid "Parameters"
+msgstr ""
+
+#, fuzzy
+msgid "Init"
+msgstr "Покана"
+
+msgid "No init"
+msgstr ""
+
+msgid "Jump on click"
+msgstr ""
+
+msgid "Steady on click"
+msgstr ""
+
+msgid "X offset:"
+msgstr ""
+
+msgid "Y offset:"
+msgstr ""
+
+msgid "Colors"
+msgstr "Цветове"
+
+msgid "Background"
+msgstr "Фон"
+
+msgid "Front"
+msgstr "Шрифт"
+
+msgid "Compose color"
+msgstr ""
+
+#, fuzzy
+msgid "Test label"
+msgstr "Тестване на всички"
+
+#, fuzzy
+msgid "Send a Pd message"
+msgstr "Съобщение"
+
+msgid "(use arrow keys for history)"
+msgstr ""
+
+msgid "no input devices"
+msgstr ""
+
+msgid "In Ports:"
+msgstr ""
+
+msgid "Out Ports:"
+msgstr ""
+
+msgid "MIDI system"
+msgstr ""
+
+msgid "MIDI Settings"
+msgstr ""
+
+msgid "ALSA MIDI Settings"
+msgstr ""
+
+msgid "Pd search path for objects, help, audio, text and other files"
+msgstr ""
+
+msgid "Use standard paths"
+msgstr ""
+
+msgid "Verbose"
+msgstr ""
+
+msgid "Pd Documents Directory"
+msgstr ""
+
+msgid "Browse"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Disable"
+msgstr ""
+
+msgid "Externals Install Directory"
+msgstr ""
+
+#, fuzzy
+msgid "Clear"
+msgstr "Изчистване на списъка"
+
+#, fuzzy
+msgid "path preferences"
+msgstr "Настройки"
+
+msgid "Choose Pd documents directory:"
+msgstr ""
+
+msgid "Install externals to directory:"
+msgstr ""
+
+msgid "Add a new path"
+msgstr ""
+
+#, tcl-format
+msgid "Edit existing path [%s]"
+msgstr ""
+
+#, fuzzy
+msgid "Patch Windows"
+msgstr "Прозореца за изпращане на файлове"
+
+#, fuzzy
+msgid "Zoom New Windows"
+msgstr "Прозореца за изпращане на файлове"
+
+msgid "GUI Settings"
+msgstr ""
+
+msgid "Preference layout (reopen the preferences to see the effect)"
+msgstr ""
+
+msgid "Use tabs"
+msgstr ""
+
+msgid "Single page"
+msgstr ""
+
+msgid "Patching helpers"
+msgstr ""
+
+msgid "Highlight active cord while connecting"
+msgstr ""
+
+#, fuzzy
+msgid "Preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "startup preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "audio preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "MIDI preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "deken preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "misc preferences"
+msgstr "Настройки"
+
+msgid "Add new library"
+msgstr ""
+
+msgid "Edit library"
+msgstr ""
+
+msgid "Settings below require a restart of Pd!"
+msgstr ""
+
+msgid "Pd libraries to load on startup"
+msgstr ""
+
+msgid "GUI Options"
+msgstr ""
+
+msgid "language"
+msgstr ""
+
+msgid "Menu language"
+msgstr ""
+
+msgid "float (32bit)"
+msgstr ""
+
+msgid "double (64bit) EXPERIMENTAL"
+msgstr ""
+
+msgid "double (64bit)"
+msgstr ""
+
+msgid "float size"
+msgstr ""
+
+msgid "Numeric precision of Pd-core"
+msgstr ""
+
+msgid "Startup Options"
+msgstr ""
+
+msgid "Defeat real-time scheduling"
+msgstr ""
+
+msgid "Startup Flags:"
+msgstr ""
+
+msgid "Help Browser"
+msgstr "Разглеждане"
+
+msgid "Associated Files"
+msgstr ""
+
+#, fuzzy
+msgid "Pd Files"
+msgstr "Файл"
+
+msgid "Max Patch Files"
+msgstr ""
+
+#, fuzzy
+msgid "Max Text Files"
+msgstr "Файл"
+
+msgid "Max Patch Files (.pat)"
+msgstr ""
+
+msgid "Max Text Files (.mxt)"
+msgstr ""
+
+#, tcl-format
+msgid "detected font: %s"
+msgstr ""
+
+#, tcl-format
+msgid "WARNING: font family '%1$s' not found, using default (%2$s)"
+msgstr ""
+
+#, tcl-format
+msgid "WARNING: font weight '%1$s' not found, using default (%2$s)"
+msgstr ""
+
+#, tcl-format
+msgid "using font: %1$s %2$s"
+msgstr ""
+
+#, tcl-format
+msgid "'%1$s' already loaded, ignoring: '%2$s'"
+msgstr ""
+
+#, tcl-format
+msgid "Loading plugin: %s"
+msgstr ""
+
+#, tcl-format
+msgid "UNHANDLED ERROR: %s"
+msgstr ""
+
+#, tcl-format
+msgid "FAILED TO LOAD %s"
+msgstr ""
+
+#, tcl-format
+msgid "Failed to read plugin %s ...skipping!"
+msgstr ""
+
+#, tcl-format
+msgid "Failed to find plugins in %s ...skipping!"
+msgstr ""
+
+msgid "Pd startup failure"
+msgstr ""
+
+msgid "Failed to start Pd-core"
+msgstr ""
+
+msgid "(Tcl) MISSING CLOSE-BRACE '}': "
+msgstr ""
+
+msgid "(Tcl) INVALID COMMAND NAME: "
+msgstr ""
+
+msgid "(Tcl) UNHANDLED ERROR: "
+msgstr ""
+
+#, tcl-format
+msgid "[deken] installed version [%1$s] > %2$s...skipping!"
+msgstr ""
+
+#, tcl-format
+msgid "[deken] installed version [%1$s] < %2$s...overwriting!"
+msgstr ""
+
+#, tcl-format
+msgid "[deken] installed version [%1$s] == %2$s...skipping!"
+msgstr ""
+
+#, tcl-format
+msgid "installing deken package '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "ignoring '%s': doesn't look like a deken package"
+msgstr ""
+
+#, tcl-format
+msgid "Installing '%s'"
+msgstr "Търсене из '%s' текста"
+
+#, tcl-format
+msgid "Successfully unzipped %1$s into %2$s."
+msgstr ""
+
+msgid "Unable to extract package automatically."
+msgstr ""
+
+msgid "Please perform the following steps manually:"
+msgstr ""
+
+#, tcl-format
+msgid "1. Unzip %s."
+msgstr ""
+
+msgid "You might need to change the file-extension from .dek to .zip"
+msgstr ""
+
+#, tcl-format
+msgid "2. Copy the contents into %s."
+msgstr ""
+
+#, tcl-format
+msgid "3. Remove %s. (optional)"
+msgstr ""
+
+#, tcl-format
+msgid "Removing '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "Uninstalling %1$s from %2$s failed!"
+msgstr ""
+
+#, tcl-format
+msgid "Skipping SHA256 verification of '%s'."
+msgstr ""
+
+#, tcl-format
+msgid "SHA256 verification of '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "Unable to fetch reference SHA256 for '%s'."
+msgstr ""
+
+#, tcl-format
+msgid "File checksum looks invalid: '%s'."
+msgstr ""
+
+#, tcl-format
+msgid "Reference checksum looks invalid: '%s'."
+msgstr ""
+
+#, tcl-format
+msgid "Unable to perform SHA256 verification for '%s'."
+msgstr ""
+
+#, tcl-format
+msgid "Unable to download from %1$s [%2$s]"
+msgstr ""
+
+#, tcl-format
+msgid "Unable to download from '%s'!"
+msgstr ""
+
+msgid "Download failed"
+msgstr ""
+
+#, tcl-format
+msgid "Unable to remove stray file '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "Unable to rename downloaded file to '%s'"
+msgstr ""
+
+msgid "Create"
+msgstr ""
+
+msgid "Check"
+msgstr ""
+
+msgid "Installation options:"
+msgstr ""
+
+msgid "Try to verify the libraries' checksum before (re)installing them"
+msgstr ""
+
+msgid "Try to remove libraries before (re)installing them"
+msgstr ""
+
+msgid "Show README of newly installed libraries (if present)"
+msgstr ""
+
+msgid "Keep package files after installation"
+msgstr ""
+
+msgid "Add newly installed libraries to Pd's search path"
+msgstr ""
+
+msgid "Platform settings:"
+msgstr ""
+
+#, tcl-format
+msgid "Default platform: %s"
+msgstr ""
+
+msgid "User-defined platform:"
+msgstr ""
+
+msgid "Hide foreign architectures"
+msgstr ""
+
+msgid ""
+"Only show the newest version of a library\n"
+"(treats other versions like foreign architectures)"
+msgstr ""
+
+#, fuzzy, tcl-format
+msgid "Deken %s Preferences"
+msgstr "Настройки"
+
+#, tcl-format
+msgid "Platform re-detected: %s"
+msgstr ""
+
+#, tcl-format
+msgid "SHA256 verification of '%s' failed!"
+msgstr ""
+
+msgid "SHA256 verification failed"
+msgstr ""
+
+#, tcl-format
+msgid "Checksum mismatch for '%s'"
+msgstr ""
+
+msgid "Deken Packages"
+msgstr ""
+
+#, fuzzy
+msgid "ZIP Files"
+msgstr "ZIP файлове"
+
+#, fuzzy
+msgid "TAR Files"
+msgstr "TAR файлове"
+
+#, fuzzy
+msgid "All Files"
+msgstr "Всички файлове"
+
+#, tcl-format
+msgid "Uninstalling previous installation of '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "Temporarily moving %1$s into %2$s failed."
+msgstr ""
+
+#, tcl-format
+msgid "Installing package '%s'"
+msgstr ""
+
+msgid "Installation completed!"
+msgstr ""
+
+#, tcl-format
+msgid "Successfully installed '%s'!"
+msgstr ""
+
+msgid "Installation failed!"
+msgstr ""
+
+#, tcl-format
+msgid "Failed to install '%s'!"
+msgstr ""
+
+msgid "Package installation failed"
+msgstr ""
+
+#, tcl-format
+msgid ""
+"Failed to completely remove %1$s.\n"
+"Please manually remove the directory %2$s after quitting Pd."
+msgstr ""
+
+#, tcl-format
+msgid "Unable to add %s to search paths"
+msgstr ""
+
+#, tcl-format
+msgid "Add %s to the Pd search paths?"
+msgstr ""
+
+#, tcl-format
+msgid "Added %s to search paths"
+msgstr ""
+
+msgid "No packages selected for installation."
+msgstr ""
+
+#, tcl-format
+msgid "Processed %d packages selected for installation."
+msgstr ""
+
+msgid "Show all"
+msgstr ""
+
+msgid "Search"
+msgstr "Търсене"
+
+#, tcl-format
+msgid "Install (%d)"
+msgstr ""
+
+msgid "Install"
+msgstr ""
+
+#, tcl-format
+msgid "%s%% of download completed"
+msgstr ""
+
+msgid "Enter an exact library or object name."
+msgstr ""
+
+msgid "e.g. 'freeverb~'"
+msgstr ""
+
+msgid "Use the '*' wildcard to match any number of characters."
+msgstr ""
+
+msgid "e.g. '*-plugin' will match 'deken-plugin' (and more)."
+msgstr ""
+
+msgid "You can restrict the search to only-libraries or only-objects."
+msgstr ""
+
+msgid "To get a list of all available externals, try an empty search."
+msgstr ""
+
+msgid "Right-clicking a search result will give you more options..."
+msgstr ""
+
+msgid "You can also search for libraries & objects via your web browser:"
+msgstr ""
+
+msgid "Find externals"
+msgstr ""
+
+msgid "Install DEK file..."
+msgstr ""
+
+msgid "Preferences..."
+msgstr "Настройки..."
+
+msgid "Search for: "
+msgstr "Търсене из текста: "
+
+msgid "libraries"
+msgstr ""
+
+msgid "objects"
+msgstr ""
+
+msgid "both"
+msgstr ""
+
+msgid "translations"
+msgstr ""
+
+msgid "Only install externals uploaded by people you trust."
+msgstr ""
+
+msgid "Disabling tabbed view: incompatible Tcl/Tk detected"
+msgstr ""
+
+msgid "Library"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Uploader"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Search Results"
+msgstr "Търсене из текста"
+
+msgid "Log"
+msgstr ""
+
+#, fuzzy, tcl-format
+msgid "Searching for \"%s\"..."
+msgstr "Търсене из текста..."
+
+#, tcl-format
+msgid "online? %s"
+msgstr ""
+
+msgid "Unable to perform search. Are you online?"
+msgstr ""
+
+#, tcl-format
+msgid "Found %1$d usable packages (of %2$d packages in total)."
+msgstr ""
+
+msgid "It appears that there are no matching packages for your architecture."
+msgstr ""
+
+msgid "No matching externals found."
+msgstr ""
+
+msgid "Try using the full name e.g. 'freeverb~'."
+msgstr ""
+
+msgid "Or use wildcards like 'freeverb*'."
+msgstr ""
+
+msgid "Please select a (writable) installation directory!"
+msgstr ""
+
+#, tcl-format
+msgid "Install %1$s to %2$s?"
+msgstr ""
+
+#, tcl-format
+msgid "Cancelling download of '%s': No installation directory given."
+msgstr ""
+
+msgid "Installing to non-existent directory failed"
+msgstr ""
+
+#, tcl-format
+msgid "Unable to install to '%s'"
+msgstr ""
+
+msgid "Directory does not exist!"
+msgstr ""
+
+msgid "Directory is not writable!"
+msgstr ""
+
+#, tcl-format
+msgid "Downloading '%s'"
+msgstr ""
+
+#, tcl-format
+msgid "Commencing download of '%1$s' into '%2$s'..."
+msgstr ""
+
+msgid "aborting."
+msgstr ""
+
+#, tcl-format
+msgid "Downloading '%s' failed"
+msgstr ""
+
+msgid "Download failed!"
+msgstr ""
+
+msgid "Download completed! Verifying..."
+msgstr ""
+
+msgid "Ignoring checksum mismatch"
+msgstr ""
+
+msgid "Ignoring checksum errors"
+msgstr ""
+
+#, tcl-format
+msgid "[deken] deken-plugin.tcl (Pd externals search) loaded from %s."
+msgstr ""
+
+#, tcl-format
+msgid "[deken] Platform detected: %s"
+msgstr ""
+
+#, fuzzy, tcl-format
+msgid "Searching on %s..."
+msgstr "Търсене из текста..."
+
+#, tcl-format
+msgid "Searching on %1$s returned %2$d results"
+msgstr ""
+
+msgid "No usable servers for searching found..."
+msgstr ""
+
+#, tcl-format
+msgid "Uploaded by %1$s @ %2$s"
+msgstr ""
+
+#, tcl-format
+msgid "Searching for '%s' failed!"
+msgstr ""
+
+msgid "Search failed"
+msgstr ""
+
+msgid "Unable to perform search."
+msgstr ""
+
+msgid "Select package for installation"
+msgstr ""
+
+msgid "Deselect package"
+msgstr ""
+
+msgid "Open package webpage"
+msgstr ""
+
+msgid "Copy package URL"
+msgstr ""
+
+msgid "Copy SHA256 checksum URL"
+msgstr ""
+
+msgid "Copy OpenGPG signature URL"
+msgstr ""
+
+#, tcl-format
+msgid "Uninstall '%s'"
+msgstr ""
+
+#, tcl-format
+msgid ""
+"Do you want Pd to use the existing documents directory for patches and "
+"external libraries?\n"
+"\n"
+"Location: %s\n"
+"\n"
+"You can change or disable this later in the Path preferences."
+msgstr ""
+
+#, tcl-format
+msgid ""
+"Do you want Pd to create a documents directory for patches and external "
+"libraries?\n"
+"\n"
+"Location: %s\n"
+"\n"
+"You can change or disable this later in the Path preferences."
+msgstr ""
+
+#, tcl-format
+msgid ""
+"Pd documents directory cannot be found:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a new location?"
+msgstr ""
+
+#, tcl-format
+msgid "couldn't create Pd documents directory: %s"
+msgstr ""
+
+#, tcl-format
+msgid "couldn't create \"externals\" directory in: %s"
+msgstr ""
+
+msgid "refusing to delete empty domain"
+msgstr ""
+
+#, tcl-format
+msgid "Couldn't create preferences \"%1$s\" in %2$s"
+msgstr ""
+
+msgid "The language can only be set during startup."
+msgstr ""
+
+msgid "Afar"
+msgstr "Афарски"
+
+msgid "Abkhazian"
+msgstr "Абхазки"
+
+msgid "Avestan"
+msgstr "Авестийски"
+
+msgid "Afrikaans"
+msgstr "Африканс"
+
+msgid "Akan"
+msgstr "Акан"
+
+msgid "Amharic"
+msgstr "Амхарски"
+
+msgid "Aragonese"
+msgstr "Арагонски"
+
+msgid "Arabic"
+msgstr "Арабски"
+
+msgid "Assamese"
+msgstr "Асамски"
+
+msgid "Avaric"
+msgstr "Аварски"
+
+msgid "Aymara"
+msgstr "Аймараски"
+
+msgid "Azerbaijani"
+msgstr "Азербайджански"
+
+msgid "Bashkir"
+msgstr "Башкирски"
+
+msgid "Belarusian"
+msgstr "Беларуски"
+
+msgid "Bulgarian"
+msgstr "Български"
+
+msgid "Bihari"
+msgstr "Бихарски"
+
+msgid "Bislama"
+msgstr "Бислама"
+
+msgid "Bambara"
+msgstr "Бамбара"
+
+msgid "Bengali"
+msgstr "Бенгалски"
+
+msgid "Tibetan"
+msgstr "Тибетски"
+
+msgid "Breton"
+msgstr "Бретонски"
+
+msgid "Bosnian"
+msgstr "Босненски"
+
+msgid "Catalan"
+msgstr "Каталонски"
+
+msgid "Chechen"
+msgstr "Чеченски"
+
+msgid "Chamorro"
+msgstr "Чаморо"
+
+msgid "Corsican"
+msgstr "Корсикански"
+
+msgid "Cree"
+msgstr "Кри"
+
+msgid "Czech"
+msgstr "Чешки"
+
+msgid "Chuvash"
+msgstr "Чувашки"
+
+msgid "Welsh"
+msgstr "Уелски"
+
+msgid "Danish"
+msgstr "Датски"
+
+msgid "German"
+msgstr "Немски"
+
+msgid "German (Austria)"
+msgstr "Немски (Австрия)"
+
+msgid "Dhivehi"
+msgstr "Дивехи"
+
+msgid "Dzongkha"
+msgstr "Дзонгкха"
+
+msgid "Ewe"
+msgstr "Еве"
+
+msgid "Greek"
+msgstr "Гръцки"
+
+msgid "English"
+msgstr "Английски"
+
+msgid "English (Canada)"
+msgstr "Английски (Канада)"
+
+msgid "English (UK)"
+msgstr ""
+
+msgid "English (USA)"
+msgstr ""
+
+msgid "Esperanto"
+msgstr "Есперанто"
+
+msgid "Spanish"
+msgstr "Испански"
+
+msgid "Estonian"
+msgstr "Естонски"
+
+msgid "Basque"
+msgstr "Баски"
+
+msgid "Persian"
+msgstr "Персийски"
+
+msgid "Fulah"
+msgstr "Фула"
+
+msgid "Finnish"
+msgstr "Фински"
+
+msgid "Fijian"
+msgstr "Фиджийски"
+
+msgid "Faroese"
+msgstr "Фарьорски"
+
+msgid "French"
+msgstr "Френски"
+
+msgid "Frisian"
+msgstr "Фризийски"
+
+msgid "Irish"
+msgstr "Ирландски"
+
+msgid "Gaelic"
+msgstr "Келтски"
+
+msgid "Galician"
+msgstr "Галисийски"
+
+msgid "Guarani"
+msgstr "Гуарански"
+
+msgid "Gujarati"
+msgstr "Гуджаратски"
+
+msgid "Manx"
+msgstr "Мански"
+
+msgid "Hausa"
+msgstr "Хауса"
+
+msgid "Hebrew"
+msgstr "Иврит"
+
+msgid "Hindi"
+msgstr "Хинди"
+
+msgid "Hiri Motu"
+msgstr "Хири моту"
+
+msgid "Croatian"
+msgstr "Хърватски"
+
+msgid "Haitian"
+msgstr "Хаитянски креолски"
+
+msgid "Hungarian"
+msgstr "Унгарски"
+
+msgid "Armenian"
+msgstr "Арменски"
+
+msgid "Herero"
+msgstr "Хереро"
+
+msgid "Interlingua"
+msgstr "Интерлингва"
+
+msgid "Indonesian"
+msgstr "Индонезийски"
+
+msgid "Occidental"
+msgstr "Окцидентал"
+
+msgid "Igbo"
+msgstr "Игбо"
+
+msgid "Nuosu"
+msgstr "Носу"
+
+msgid "Inupiaq"
+msgstr "Инупиак"
+
+msgid "Ido"
+msgstr "Идо"
+
+msgid "Icelandic"
+msgstr "Исландски"
+
+msgid "Italian"
+msgstr "Италиански"
+
+msgid "Inuktitut"
+msgstr "Инуктитут"
+
+msgid "Japanese"
+msgstr "Японски"
+
+msgid "Javanese"
+msgstr "Явански"
+
+msgid "Georgian"
+msgstr "Грузински"
+
+msgid "Kongo"
+msgstr "Конго"
+
+msgid "Gikuyu"
+msgstr "Кикую"
+
+msgid "Kwanyama"
+msgstr "Кваняма"
+
+msgid "Kazakh"
+msgstr "Казахски"
+
+msgid "Greenlandic"
+msgstr "Гренландски"
+
+msgid "Kannada"
+msgstr "Каннада"
+
+msgid "Korean"
+msgstr "Корейски"
+
+msgid "Kanuri"
+msgstr "Канури"
+
+msgid "Kashmiri"
+msgstr "Кашмирски"
+
+msgid "Kurdish"
+msgstr "Кюрдски"
+
+msgid "Komi"
+msgstr "Коми"
+
+msgid "Cornish"
+msgstr "Корнуолски"
+
+msgid "Kyrgyz"
+msgstr "Киргизки"
+
+msgid "Latin"
+msgstr "Латински"
+
+msgid "Luxembourgish"
+msgstr "Люксембургски"
+
+msgid "Luganda"
+msgstr "Луганда"
+
+msgid "Limburgish"
+msgstr "Лимбургски"
+
+msgid "Lingala"
+msgstr "Лингала"
+
+msgid "Lao"
+msgstr "Лаоски"
+
+msgid "Lithuanian"
+msgstr "Литовски"
+
+msgid "Luba-Katanga"
+msgstr "Луба-катанга"
+
+msgid "Latvian"
+msgstr "Латвийски"
+
+msgid "Malagasy"
+msgstr "Малгашки"
+
+msgid "Marshallese"
+msgstr "Маршалски"
+
+msgid "Maori"
+msgstr "Маорски"
+
+msgid "Macedonian"
+msgstr "Македонска лит. норма"
+
+msgid "Malayalam"
+msgstr "Малаялам"
+
+msgid "Mongolian"
+msgstr "Монголски"
+
+msgid "Marathi"
+msgstr "Маратхи"
+
+msgid "Malay"
+msgstr "Малайски"
+
+msgid "Maltese"
+msgstr "Малтийски"
+
+msgid "Burmese"
+msgstr "Бирмански"
+
+msgid "Nauru"
+msgstr "Науруански"
+
+msgid "Nepali"
+msgstr "Непалски"
+
+msgid "Ndonga"
+msgstr "Ндонга"
+
+msgid "Dutch"
+msgstr "Нидерландски"
+
+msgid "Norwegian Nynorsk"
+msgstr "Норвежки нюношк"
+
+msgid "Navaho"
+msgstr "Навахо"
+
+msgid "Nyanja"
+msgstr "Нянджа"
+
+msgid "Occitan"
+msgstr "Окситански"
+
+msgid "Ojibwe"
+msgstr "Оджибве"
+
+msgid "Oromo"
+msgstr "Оромо"
+
+msgid "Odia"
+msgstr "Одия"
+
+msgid "Ossetian"
+msgstr "Осетински"
+
+msgid "Panjabi"
+msgstr ""
+
+msgid "Pali"
+msgstr "Пали"
+
+msgid "Polish"
+msgstr "Полски"
+
+msgid "Pashto"
+msgstr "Пущунски"
+
+msgid "Portuguese"
+msgstr "Португалски"
+
+msgid "Portuguese (Brazil)"
+msgstr "Португалски (Бразилия)"
+
+msgid "Portuguese (Portugal)"
+msgstr "Португалски (Португалия)"
+
+msgid "Quechua"
+msgstr "Кечуа"
+
+msgid "Romansh"
+msgstr "Романшки"
+
+msgid "Rundi"
+msgstr "Рунди"
+
+msgid "Romanian"
+msgstr "Румънски"
+
+msgid "Russian"
+msgstr "Руски"
+
+msgid "Kinyarwanda"
+msgstr "Руанда"
+
+msgid "Sanskrit"
+msgstr "Санскрит"
+
+msgid "Sardinian"
+msgstr "Сардински"
+
+msgid "Sindhi"
+msgstr "Синдхи"
+
+msgid "Sango"
+msgstr "Санго"
+
+msgid "Sinhala"
+msgstr "Синхалски"
+
+msgid "Slovak"
+msgstr "Словашки"
+
+msgid "Slovenian"
+msgstr "Словенски"
+
+msgid "Samoan"
+msgstr "Самоански"
+
+msgid "Shona"
+msgstr "Шона"
+
+msgid "Somali"
+msgstr "Сомалийски"
+
+msgid "Albanian"
+msgstr "Албански"
+
+msgid "Serbian"
+msgstr "Сръбски"
+
+msgid "Swati"
+msgstr "Свази"
+
+msgid "Sundanese"
+msgstr "Сундански"
+
+msgid "Swedish"
+msgstr "Шведски"
+
+msgid "Swahili"
+msgstr "Суахили"
+
+msgid "Tamil"
+msgstr "Тамилски"
+
+msgid "Telugu"
+msgstr "Телугу"
+
+msgid "Tajik"
+msgstr "Таджикски"
+
+msgid "Thai"
+msgstr "Тайски"
+
+msgid "Tigrinya"
+msgstr "Тигриня"
+
+msgid "Turkmen"
+msgstr "Туркменски"
+
+msgid "Tagalog"
+msgstr "Тагалог"
+
+msgid "Tswana"
+msgstr "Тсвана"
+
+msgid "Tongan"
+msgstr "Тонгански"
+
+msgid "Turkish"
+msgstr "Турски"
+
+msgid "Tsonga"
+msgstr "Цонга"
+
+msgid "Tatar"
+msgstr "Татарски"
+
+msgid "Twi"
+msgstr "Чви"
+
+msgid "Tahitian"
+msgstr "Таитянски"
+
+msgid "Uyghur"
+msgstr "Уйгурски"
+
+msgid "Ukrainian"
+msgstr "Украински"
+
+msgid "Urdu"
+msgstr "Урду"
+
+msgid "Uzbek"
+msgstr "Узбекски"
+
+msgid "Venda"
+msgstr "Венда"
+
+msgid "Vietnamese"
+msgstr "Виетнамски"
+
+msgid "Volapük"
+msgstr "Волапюк"
+
+msgid "Walloon"
+msgstr "Валонски"
+
+msgid "Wolof"
+msgstr "Волоф"
+
+msgid "Xhosa"
+msgstr "Кхоса"
+
+msgid "Yiddish"
+msgstr "Идиш"
+
+msgid "Yoruba"
+msgstr "Йоруба"
+
+msgid "Zhuang"
+msgstr "Джуански"
+
+msgid "Chinese (Traditional)"
+msgstr ""
+
+msgid "Zulu"
+msgstr "Зулуски"
+
+msgid "(no translation)"
+msgstr ""
+
+#, tcl-format
+msgid "(default language: %s)"
+msgstr ""
+
+#, fuzzy
+msgid "Print..."
+msgstr "_Редактиране..."
+
+#, tcl-format
+msgid "ignoring '%s': doesn't exist"
+msgstr ""
+
+#, fuzzy
+msgid "About Pd"
+msgstr "_Относно"
+
+#, tcl-format
+msgid "couldn't read \"%s\" document"
+msgstr ""
+
+msgid "Save"
+msgstr "Запазване"
+
+#, fuzzy
+msgid "Save As..."
+msgstr "Записване като..."
+
+msgid "Paste Replace"
+msgstr ""
+
+#, fuzzy
+msgid "Duplicate"
+msgstr "Дата"
+
+#, fuzzy
+msgid "Zoom In"
+msgstr "Долу"
+
+#, fuzzy
+msgid "Zoom Out"
+msgstr "Долу"
+
+msgid "Tidy Up"
+msgstr ""
+
+msgid "(Dis)Connect Selection"
+msgstr ""
+
+msgid "Triggerize"
+msgstr ""
+
+#, fuzzy
+msgid "Edit Mode"
+msgstr "Режим \"Редакция\""
+
+#, fuzzy
+msgid "Undo"
+msgstr "Уганда"
+
+msgid "Redo"
+msgstr "Червено"
+
+msgid "New"
+msgstr "Ново"
+
+msgid "Open"
+msgstr "Отваряне"
+
+msgid "Message..."
+msgstr "Съобщение..."
+
+msgid "Cut"
+msgstr ""
+
+#, fuzzy
+msgid "Select All"
+msgstr "Изтрива всички"
+
+#, fuzzy
+msgid "Clear Console"
+msgstr "Изчистване на списъка"
+
+msgid "Object"
+msgstr ""
+
+msgid "Message"
+msgstr "Съобщение"
+
+#, fuzzy
+msgid "Number"
+msgstr "$ Номер"
+
+msgid "List"
+msgstr ""
+
+msgid "Symbol"
+msgstr ""
+
+#, fuzzy
+msgid "Comment"
+msgstr "Команда"
+
+msgid "Graph"
+msgstr "Графа"
+
+#, fuzzy
+msgid "Find..."
+msgstr "Изпращане на файлове..."
+
+msgid "Find Again"
+msgstr ""
+
+msgid "Find Last Error"
+msgstr ""
+
+msgid "DSP On"
+msgstr ""
+
+msgid "DSP Off"
+msgstr "DSP Изкл"
+
+msgid "Test Audio and MIDI..."
+msgstr ""
+
+msgid "Load Meter"
+msgstr "Измервател на забавянето"
+
+msgid "Audio Settings..."
+msgstr ""
+
+msgid "MIDI Settings..."
+msgstr ""
+
+msgid "Minimize"
+msgstr ""
+
+#, fuzzy
+msgid "Zoom"
+msgstr "Долу"
+
+msgid "Bring All to Front"
+msgstr ""
+
+#, fuzzy
+msgid "Next Window"
+msgstr "Прозореца за изпращане на файлове"
+
+#, fuzzy
+msgid "Previous Window"
+msgstr "Прозореца за изпращане на файлове"
+
+#, fuzzy
+msgid "Parent Window"
+msgstr "Прозореца за изпращане на файлове"
+
+msgid "HTML Manual..."
+msgstr ""
+
+#, fuzzy
+msgid "Browser..."
+msgstr "Разглеждане..."
+
+msgid "List of objects..."
+msgstr ""
+
+msgid "puredata.info"
+msgstr ""
+
+msgid "Check for updates"
+msgstr ""
+
+msgid "Report a bug"
+msgstr ""
+
+#, fuzzy
+msgid "Clear Menu"
+msgstr "Изчистване на списъка"
+
+msgid ""
+"Delete all preferences?\n"
+"(takes effect when Pd is restarted)"
+msgstr ""
+
+msgid "removed GUI settings"
+msgstr ""
+
+msgid "no Pd-GUI settings to clear"
+msgstr ""
+
+#, fuzzy
+msgid "Edit Preferences..."
+msgstr "Настройки..."
+
+#, fuzzy
+msgid "Save All Preferences"
+msgstr "Настройки"
+
+#, fuzzy
+msgid "Save to..."
+msgstr "Записване като..."
+
+msgid "Load from..."
+msgstr ""
+
+msgid "Forget All..."
+msgstr ""
+
+#, fuzzy
+msgid "Tabbed preferences"
+msgstr "Настройки"
+
+msgid "Open Recent"
+msgstr ""
+
+msgid "Quit"
+msgstr "Изход"
+
+#, tcl-format
+msgid "Do you want to save the changes you made in '%s'?"
+msgstr ""
+
+msgid "Properties"
+msgstr ""
+
+#, tcl-format
+msgid "Accept changes to '%s'?"
+msgstr ""
+
+msgid ""
+"Accepting will update the contents in the associated object. You still have "
+"to save the patch to make the changes persistent."
+msgstr ""
+
+#, tcl-format
+msgid "dropped %d lines from the Pd window"
+msgstr ""
+
+#, tcl-format
+msgid "the Pd window filtered %d lines"
+msgstr ""
+
+msgid "Audio on"
+msgstr ""
+
+msgid "Audio off"
+msgstr ""
+
+msgid "Pd"
+msgstr ""
+
+msgid "EXPERIMENTAL double (64bit) precision"
+msgstr ""
+
+#, tcl-format
+msgid "%dbit-floats EXPERIMENTAL"
+msgstr ""
+
+#, fuzzy
+msgid "DSP"
+msgstr "Изкл."
+
+msgid "Audio I/O error"
+msgstr ""
+
+msgid "Log:"
+msgstr ""
+
+msgid "fatal"
+msgstr ""
+
+msgid "error"
+msgstr ""
+
+msgid "normal"
+msgstr ""
+
+msgid "debug"
+msgstr ""
+
+msgid "all"
+msgstr ""
+
+msgid "y1"
+msgstr ""
+
+msgid "New..."
+msgstr ""
+
+msgid "Edit..."
+msgstr "Редактиране..."
+
+#, fuzzy
+msgid "Delete"
+msgstr "Изтриване"
+
+#, tcl-format
+msgid "ignoring '%s': doesn't look like a Pd file"
+msgstr ""
+
+#, fuzzy
+#~ msgid "bottom:"
+#~ msgstr "Долу"
+
+#, fuzzy
+#~ msgid "height:"
+#~ msgstr "Дясно"
+
+#, fuzzy
+#~ msgid "right:"
+#~ msgstr "Дясно"
+
+#, fuzzy
+#~ msgid "size:"
+#~ msgstr "Размер"
+
+#, fuzzy
+#~ msgid "start searching for externals..."
+#~ msgstr "Търсене из текста..."
+
+#, fuzzy
+#~ msgid "for:"
+#~ msgstr "Порт:"
+
+#, fuzzy
+#~ msgid "Close this window??"
+#~ msgstr "Затваряне на този таб/прозорец"
+
+#, fuzzy
+#~ msgid "Filters"
+#~ msgstr "Файл"
+
+#, fuzzy
+#~ msgid "Text Editor"
+#~ msgstr "Цветове за текста"
