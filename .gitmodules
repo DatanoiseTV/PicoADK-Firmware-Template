@@ -13,3 +13,6 @@
 [submodule "lib/usb_midi_host"]
 	path = lib/usb_midi_host
 	url = https://github.com/rppicomidi/usb_midi_host
+[submodule "lib/tlsf"]
+	path = lib/tlsf
+	url = https://github.com/earlephilhower/tlsf.git
