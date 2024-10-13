@@ -26,6 +26,10 @@ void MIDIInputUSB::setChannelPressureCallback(void (*callback)(uint8_t, uint8_t)
     MIDIChannelPressureCallback = callback;
 }
 
+void MIDIInputUSB::setClockCallback(void (*callback)()) {
+    MIDIClockCallback = callback;
+}
+
 // Helper function to parse pitch bend data
 uint16_t MIDIInputUSB::parsePitchBend(const uint8_t* packet) {
     // Combine the two data bytes into a 14-bit pitch bend value
@@ -49,6 +53,13 @@ void MIDIInputUSB::process() {
 
         uint8_t status = packet[0] >> 4;
         uint8_t channel = packet[0] & 0xF;
+
+        if(packet[0] == 0xF8]{
+            if (MIDIClockCallback != NULL)
+            {
+                MIDIClockCallback();
+            }
+        }
 
         switch (status) {
             case 0x8: // Note Off
