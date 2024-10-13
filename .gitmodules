@@ -16,3 +16,6 @@
 [submodule "lib/tlsf"]
 	path = lib/tlsf
 	url = https://github.com/earlephilhower/tlsf.git
+[submodule "lib/libpd"]
+	path = lib/libpd
+	url = https://github.com/libpd/libpd.git

@@ -33,7 +33,6 @@
 audio_buffer_pool_t *audio_pool;
 
 
-#include <pdmain.h>
 
 float smp[2];
 
@@ -44,36 +43,6 @@ static uint8_t midi_dev_addr = 0;
 MIDIInputUSB usbMIDI;
 TaskHandle_t usb_task_handle;
 
-#define IOCHANS 1
-#define BLKSIZE 64
-float soundin[IOCHANS * BLKSIZE], soundout[IOCHANS * BLKSIZE];
-
-// TODO : move macros out of here
-
-#define HV_HASH_NOTEIN 0x67E37CA3
-#define HV_HASH_CTLIN 0x41BE0f9C
-#define HV_HASH_POLYTOUCHIN 0xBC530F59
-#define HV_HASH_PGMIN 0x2E1EA03D
-#define HV_HASH_TOUCHIN 0x553925BD
-#define HV_HASH_BENDIN 0x3083F0F7
-#define HV_HASH_MIDIIN 0x149631bE
-#define HV_HASH_MIDIREALTIMEIN 0x6FFF0BCF
-
-#define HV_HASH_NOTEOUT 0xD1D4AC2
-#define HV_HASH_CTLOUT 0xE5e2A040
-#define HV_HASH_POLYTOUCHOUT 0xD5ACA9D1
-#define HV_HASH_PGMOUT 0x8753E39E
-#define HV_HASH_TOUCHOUT 0x476D4387
-#define HV_HASH_BENDOUT 0xE8458013
-#define HV_HASH_MIDIOUT 0x6511DE55
-#define HV_HASH_MIDIOUTPORT 0x165707E4
-
-#define MIDI_RT_CLOCK 0xF8
-#define MIDI_RT_START 0xFA
-#define MIDI_RT_CONTINUE 0xFB
-#define MIDI_RT_STOP 0xFC
-#define MIDI_RT_ACTIVESENSE 0xFE
-#define MIDI_RT_RESET 0xFF
 
 #ifdef __cplusplus
 extern "C"
@@ -350,8 +319,7 @@ extern "C"
 
         // Initialize the audio subsystem
         audio_pool = init_audio();
-        pdmain_init();
-
+      
         // Create FreeRTOS tasks for MIDI handling and LED blinking
         //xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
        // xTaskCreate(usb_eth_task, "Ethernet", 8192, NULL, configMAX_PRIORITIES, NULL);
@@ -394,7 +362,7 @@ extern "C"
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
             //pd_prog.processInlineInterleaved(smp, smp, 1);
-            float smp = soundout[i];
+            float smp = 1.0;
  
             samples[i * 2 + 0] = float_to_int32(smp); //float_to_int32(smp); // Left channel sample
             samples[i * 2 + 1] = float_to_int32(smp); // Right channel sample
