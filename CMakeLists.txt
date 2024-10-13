@@ -68,7 +68,7 @@ add_executable(main
     src/picoadk_hw.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
-    src/psram.cpp
+    # src/psram.cpp
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
 )
 
@@ -146,15 +146,15 @@ target_compile_definitions(Audio PRIVATE
     SAMPLE_RATE=${DSP_SAMPLE_RATE}
 )
 
-# Configure the linker script with actual values
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in  # Input template file
-    ${CMAKE_CURRENT_BINARY_DIR}/default.ld     # Output linker script file
-    @ONLY                                      # Use only @var@ style placeholders
-)
+# # Configure the linker script with actual values
+# configure_file(
+#     ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in  # Input template file
+#     ${CMAKE_CURRENT_BINARY_DIR}/default.ld     # Output linker script file
+#     @ONLY                                      # Use only @var@ style placeholders
+# )
 
 # Set the linker script to use the custom default.ld
-pico_set_linker_script(main ${CMAKE_CURRENT_BINARY_DIR}/default.ld)
+# pico_set_linker_script(main ${CMAKE_CURRENT_BINARY_DIR}/default.ld)
 
 
 target_link_options(main PRIVATE

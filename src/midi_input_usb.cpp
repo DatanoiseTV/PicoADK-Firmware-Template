@@ -37,9 +37,6 @@ uint16_t MIDIInputUSB::parsePitchBend(const uint8_t* packet) {
 }
 
 
-
-
-
 void MIDIInputUSB::process() {
     uint8_t packet[4];
 
@@ -54,8 +51,8 @@ void MIDIInputUSB::process() {
         uint8_t status = packet[0] >> 4;
         uint8_t channel = packet[0] & 0xF;
 
-        if(packet[0] == 0xF8]{
-            if (MIDIClockCallback != NULL)
+        if(packet[0] == 0xF8){
+            if (MIDIClockCallback != nullptr)
             {
                 MIDIClockCallback();
             }

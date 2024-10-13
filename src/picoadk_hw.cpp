@@ -5,12 +5,17 @@ void picoadk_init()
 {
         vreg_set_voltage(VREG_VOLTAGE_1_30);
         sleep_ms(1);
-        set_sys_clock_khz(300000, true);
+        set_sys_clock_khz(240000, true);
 
         // Initialize TinyUSB
         board_init();
 
-        tusb_init();
+        // tusb_init(0, TUSB_ROLE_DEVICE);
+        #if TUSB_VERSION_NUMBER >= 1700
+            tusb_init(0, TUSB_ROLE_DEVICE);
+        #else
+            tusb_init();
+        #endif
 
         stdio_init_all();
 

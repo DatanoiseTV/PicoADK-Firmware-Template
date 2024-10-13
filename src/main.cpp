@@ -34,6 +34,8 @@ static uint8_t midi_dev_addr = 0;
 
 MIDIInputUSB usbMIDI;
 
+// TODO : move macros out of here
+
 #define HV_HASH_NOTEIN          0x67E37CA3
 #define HV_HASH_CTLIN           0x41BE0f9C
 #define HV_HASH_POLYTOUCHIN     0xBC530F59
@@ -58,11 +60,6 @@ MIDIInputUSB usbMIDI;
 #define MIDI_RT_STOP            0xFC
 #define MIDI_RT_ACTIVESENSE     0xFE
 #define MIDI_RT_RESET           0xFF
-
-// TODO - implement MIDI CLOCK 
-//      - Pitch bend
-//      - Aftertouch      
-//      - Program Change
 
 #ifdef __cplusplus
 extern "C" {
@@ -97,6 +94,11 @@ extern "C" {
         usbMIDI.setNoteOffCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
             pd_prog.sendMessageToReceiverV(HV_HASH_NOTEIN, 0, "fff", (float)note, (float)velocity, (float)channel);
             // Handle Note Off event
+        });
+
+        usbMIDI.setClockCallback([]() {
+            // Handle MIDI Clock event
+            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "f", (float)MIDI_RT_CLOCK);
         });
 
         while (1)
