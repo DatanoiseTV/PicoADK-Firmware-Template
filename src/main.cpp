@@ -33,6 +33,7 @@ static uint8_t midi_dev_addr = 0;
 #endif
 
 MIDIInputUSB usbMIDI;
+TaskHandle_t usb_task_handle;
 
 // TODO : move macros out of here
 
@@ -148,7 +149,8 @@ extern "C" {
 
         // Create FreeRTOS tasks for MIDI handling and LED blinking
         xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, NULL);
+        xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, &usb_task_handle);
+        vTaskCoreAffinitySet(usb_task_handle, (1 << 1));
 
         // Start the FreeRTOS scheduler
         vTaskStartScheduler();
