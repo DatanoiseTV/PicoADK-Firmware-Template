@@ -98,7 +98,7 @@ extern "C" {
 
         usbMIDI.setClockCallback([]() {
             // Handle MIDI Clock event
-            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "f", (float)MIDI_RT_CLOCK);
+            pd_prog.sendMessageToReceiverV(HV_HASH_MIDIREALTIMEIN, 0, "ff", (float)MIDI_RT_CLOCK);
         });
 
         while (1)
