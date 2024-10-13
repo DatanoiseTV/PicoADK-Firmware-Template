@@ -36,7 +36,7 @@ project(main C CXX ASM)
 
 pico_sdk_init()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include  ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking ${CMAKE_CURRENT_BINARY_DIR} ".")
 
 if (USE_PRECOMPILED_LIBS)
     add_library(audio STATIC IMPORTED)
@@ -68,6 +68,8 @@ add_executable(main
     src/picoadk_hw.cpp
     src/midi_input_usb.cpp
     src/get_serial.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dhserver.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/pico-sdk/lib/tinyusb/lib/networking/dnserver.c
     # src/psram.cpp
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
 )
@@ -106,6 +108,7 @@ if (USE_PRECOMPILED_LIBS)
         audio
         FreeRTOS-Kernel
         heavy
+        lwip
     )
 else()
     target_link_libraries(main
@@ -131,6 +134,7 @@ else()
         Audio
         FreeRTOS-Kernel
         heavy
+        lwip
     )
 endif()
 

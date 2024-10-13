@@ -42,6 +42,9 @@
   #error CFG_TUSB_MCU must be defined
 #endif
 
+#define TCP_MSS                         (1500 /*mtu*/ - 20 /*iphdr*/ - 20 /*tcphhr*/)
+#define TCP_SND_BUF                     (4 * TCP_MSS)
+#define TCP_WND                         (4 * TCP_MSS)
 
 // RHPort number used for device can be defined by board.mk, default to port 0
 #ifndef BOARD_DEVICE_RHPORT_NUM
@@ -98,12 +101,37 @@
 #define CFG_TUD_ENDPOINT0_SIZE    64
 #endif
 
+//--------------------------------------------------------------------
+// NCM CLASS CONFIGURATION, SEE "ncm.h" FOR PERFORMANCE TUNING
+//--------------------------------------------------------------------
+
+// Must be >> MTU
+// Can be set to 2048 without impact
+#define CFG_TUD_NCM_IN_NTB_MAX_SIZE (2 * TCP_MSS + 100)
+
+// Must be >> MTU
+// Can be set to smaller values if wNtbOutMaxDatagrams==1
+#define CFG_TUD_NCM_OUT_NTB_MAX_SIZE (2 * TCP_MSS + 100)
+
+// Number of NCM transfer blocks for reception side
+#ifndef CFG_TUD_NCM_OUT_NTB_N
+  #define CFG_TUD_NCM_OUT_NTB_N 1
+#endif
+
+// Number of NCM transfer blocks for transmission side
+#ifndef CFG_TUD_NCM_IN_NTB_N
+  #define CFG_TUD_NCM_IN_NTB_N 1
+#endif
+
+
 //------------- CLASS -------------//
 #define CFG_TUD_CDC               0
 #define CFG_TUD_MSC               0
 #define CFG_TUD_HID               0
 #define CFG_TUD_MIDI              1
 #define CFG_TUD_VENDOR            0
+#define CFG_TUD_ECM_RNDIS     USE_ECM
+#define CFG_TUD_NCM           (1 - CFG_TUD_ECM_RNDIS)
 
 #define CFG_TUH_MIDI              CFG_TUD_MIDI
 

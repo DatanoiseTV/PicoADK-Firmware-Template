@@ -10,13 +10,7 @@ void picoadk_init()
         // Initialize TinyUSB
         board_init();
 
-        // tusb_init(0, TUSB_ROLE_DEVICE);
-        #if TUSB_VERSION_NUMBER >= 1700
-            tusb_init(0, TUSB_ROLE_DEVICE);
-        #else
-            tusb_init();
-        #endif
-
+         tusb_init();
         stdio_init_all();
 
         // set gpio 25 (soft mute) to output and set to 1 (unmute)
