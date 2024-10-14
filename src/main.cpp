@@ -1,13 +1,6 @@
 #include <stdio.h>
 #include "project_config.h"
 
-// Reverse compatibility with old PicoSDK.
-#if __has_include("bsp/board_api.h")
-#include "bsp/board_api.h"
-#else
-#include "bsp/board.h"
-#endif
-
 #include "midi_input_usb.h"
 #include "audio_subsystem.h"
 #include "picoadk_hw.h"
@@ -18,56 +11,39 @@
 
 #include "arduino_compat.h"
 
+#include <psram.h>
+
+volatile size_t psram_size;
+
 // Audio Buffer (Size is set in lib/audio/include/audio_subsystem.h)
 audio_buffer_pool_t *audio_pool;
 
-MIDIInputUSB usbMIDI;
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-    /**
-     * Task to handle USB MIDI input processing.
-     *
-     * @param pvParameters Unused task parameters
-     */
-    void usb_midi_task(void *pvParameters)
-    {
-        // Setup MIDI Callbacks using lambdas
-        usbMIDI.setCCCallback([](uint8_t cc, uint8_t value, uint8_t channel) {
-            // Handle Control Change (CC) event
-            // e.g. Dsp_cc(ctx, cc, value, channel);
-        });
+    inline int getTotalPSRAMHeap() {
+#if defined(RP2350_PSRAM_CS)
+        extern size_t __psram_total_space();
+        return __psram_total_space();
+#else
+        return 0;
+#endif
+    }
 
-        usbMIDI.setNoteOnCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
-            if (velocity > 0)
-            {
-                // Handle Note On event
-                // e.g. Dsp_noteOn(ctx, note, channel);
-            }
-            else
-            {
-                // Treat zero velocity as Note Off
-                // e.g. Dsp_noteOff(ctx, note, channel);
-            }
-        });
+     inline int getUsedPSRAMHeap() {
+#if defined(RP2350_PSRAM_CS)
+        extern size_t __psram_total_used();
+        return __psram_total_used();
+#else
+        return 0;
+#endif
+    }
 
-        usbMIDI.setNoteOffCallback([](uint8_t note, uint8_t velocity, uint8_t channel) {
-            // Handle Note Off event
-            // e.g. Dsp_noteOff(ctx, note, channel);
-        });
 
-        while (1)
-        {
-            // TinyUSB Device Task
-            #if (OPT_MODE_HOST == 1)
-            tuh_task();
-            #else
-            tud_task();
-            #endif
-            usbMIDI.process();
-        }
+     inline int getFreePSRAMHeap() {
+        return getTotalPSRAMHeap() - getUsedPSRAMHeap();
     }
 
     /**
@@ -83,10 +59,15 @@ extern "C" {
         while (1)
         {
             gpio_put(2, 1);
-            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
+            vTaskDelay(pdMS_TO_TICKS(50)); // Delay for 100ms
             gpio_put(2, 0);
+            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100ms
+
+            printf("Total PSRAM Heap: %d\n", getFreePSRAMHeap());
         }
     }
+
+
 
     /**
      * Main entry point.
@@ -96,22 +77,25 @@ extern "C" {
         // Initialize hardware
         picoadk_init();
 
+
         // Initialize DSP engine (if needed)
 
         // Initialize the audio subsystem
         audio_pool = init_audio();
 
         // Create FreeRTOS tasks for MIDI handling and LED blinking
-        xTaskCreate(usb_midi_task, "USB_MIDI_Task", 4096, NULL, configMAX_PRIORITIES, NULL);
-        xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, NULL);
+
+        //xTaskCreate(blinker_task, "Blinker_Task", 128, NULL, configMAX_PRIORITIES - 1, NULL);
 
         // Start the FreeRTOS scheduler
-        vTaskStartScheduler();
+       //vTaskStartScheduler();
 
         // Idle loop (this is fine for Cortex-M33)
         while (1)
         {
             // Could use `taskYIELD()` or similar here if needed
+            printf("Total PSRAM Heap: %d\n", getTotalPSRAMHeap());
+            sleep_ms(1000);
         }
     }
 
@@ -134,8 +118,8 @@ extern "C" {
         // Fill buffer with 32-bit samples (stereo, 2 channels)
         for (uint i = 0; i < buffer->max_sample_count; i++)
         {
-            samples[i * 2 + 0] = 0;   // Left channel sample
-            samples[i * 2 + 1] = 0;   // Right channel sample
+            samples[i * 2 + 0] = 0; // Left channel sample
+            samples[i * 2 + 1] = 0; // Right channel sample
             // Use your DSP function here for generating the audio samples
         }
 

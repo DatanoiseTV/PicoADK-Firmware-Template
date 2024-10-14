@@ -79,19 +79,20 @@ endif()
 
 add_executable(main
     # vultsrc/dsp.vult
-    src/usb_descriptors.c
+    #src/usb_descriptors.c
     src/main.cpp 
     src/picoadk_hw.cpp
-    src/midi_input_usb.cpp
+    #src/midi_input_usb.cpp
     src/get_serial.c
+    src/psram.cpp
     lib/FreeRTOS-Kernel/portable/MemMang/heap_3.c
 )
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
 
-pico_enable_stdio_uart(main 1)
-pico_enable_stdio_usb(main 0)
+#pico_enable_stdio_uart(main 1)
+pico_enable_stdio_usb(main 1)
 
 # Add the standard library to the build
 target_link_libraries(main pico_stdlib)
@@ -114,9 +115,10 @@ target_link_libraries(main
         pico_util_buffer
         pico_multicore
         pico_stdio_uart
-        tinyusb_device
-        tinyusb_host
-        tinyusb_board
+        
+        #tinyusb_device
+        #tinyusb_host
+        #tinyusb_board
 	Audio
         #Oled
         FreeRTOS-Kernel
@@ -125,14 +127,22 @@ target_link_libraries(main
 target_compile_definitions(main PRIVATE
         USE_AUDIO_I2S=1
         PICO_USE_SW_SPIN_LOCKS=1
+        RP2350_PSRAM_CS=0
 )
 
 target_link_options(main PRIVATE
         -Xlinker --print-memory-usage
 )
 
-# TODO: PSRAM Linker Map
-# pico_set_linker_script(main ${CMAKE_BINARY_DIR}/memmap.ld)
+add_custom_target(
+    generate_linker_script ALL
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/tools/simplesub.py -i ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in -o ${CMAKE_CURRENT_BINARY_DIR}/default.ld --sub __FLASH_LENGTH__ ${FLASH_LENGTH} --sub __EEPROM_START__ ${EEPROM_START} --sub __FS_START__ ${FS_START} --sub __FS_END__ ${FS_END} --sub __RAM_LENGTH__ ${RAM_LENGTH} --sub __PSRAM_LENGTH__ ${PSRAM_LENGTH}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/default.ld.in ${CMAKE_CURRENT_SOURCE_DIR}/tools/simplesub.py
+)
+
+add_dependencies(main generate_linker_script)
+
+pico_set_linker_script(main ${CMAKE_CURRENT_BINARY_DIR}/default.ld)
 
 file(GLOB files "${CMAKE_CURRENT_LIST_DIR}/piosrc/*.pio")
 foreach(file ${files})

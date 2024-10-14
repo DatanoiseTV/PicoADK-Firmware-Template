@@ -1,5 +1,6 @@
 #include "picoadk_hw.h"
 #include "hardware/structs/xip_ctrl.h"
+#include <psram.h>
 
 void picoadk_init()
 {
@@ -11,9 +12,6 @@ void picoadk_init()
         #warning "No overclocking will performed, as this is untested on plaftorms other than the RP2040."
         #endif
 
-        // Initialize TinyUSB
-        board_init();
-        tusb_init();
         stdio_init_all();
 
         // set gpio 25 (soft mute) to output and set to 1 (unmute)
@@ -59,9 +57,6 @@ void picoadk_init()
         spi_set_format(spi1, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         spi_set_slave(spi1, false);
 
-        // Set up PSRAM
-        gpio_set_function(47, GPIO_FUNC_XIP_CS1); // CS for PSRAM
-        xip_ctrl_hw->ctrl|=XIP_CTRL_WRITABLE_M1_BITS;
 }
 
 int adc128_read(uint8_t chan)
