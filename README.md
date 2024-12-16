@@ -1,6 +1,7 @@
 # PicoADK v2
 
 We are currently working on the PicoADK v2 - the successor to the PicoADK v1. It is powered by the RP2350A Cortex-M33 MCU, which has floating point support along other features.
+Explore the RP235x branches of this repo for work-in-progress.
 
 <img width="540" alt="Advert_PicoADKv2" src="https://github.com/user-attachments/assets/82f0d756-e4cc-4e43-a18b-3dda2834ecd2">
 
