@@ -6,7 +6,7 @@ audio_buffer_pool_t *init_audio()
 {
 
     static audio_format_t audio_format = {
-        .sample_freq = 44100,
+        .sample_freq = SAMPLE_RATE,
         .pcm_format = AUDIO_PCM_FORMAT_S32,
         .channel_count = (audio_channel_t)2};
 

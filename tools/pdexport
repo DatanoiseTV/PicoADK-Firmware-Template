@@ -1,0 +1,35 @@
+#!/bin/bash
+
+PD_HVCC_DIR=/home/$USER/Documents/Pd
+PICO_DIR=/home/$USER/dev/PicoADK-Firmware-Template
+UF2CONV=/home/$USER/dev/uf2/utils/uf2conv.py
+
+# acticate the virtual environment in PD_HVCC_DIR
+source $PD_HVCC_DIR/hvccvenv/bin/activate
+# run hvcc -o PD_HVCC_DIR/prog -n prog _main.pd
+hvcc -o $PD_HVCC_DIR/prog -n prog $1
+echo "Compiled $1"
+
+
+# cp $PD_HVCC_DIR/* $PICO_DIR/lib/heavy
+rsync -av $PD_HVCC_DIR/prog/c/* $PICO_DIR/lib/heavy
+echo "Copied files from $PD_HVCC_DIR to $PICO_DIR"
+
+# make the firmware
+if [ -d $PICO_DIR/build ]; then
+    cd $PICO_DIR/build
+    make
+    echo "Firmware built"
+else
+    echo "Build folder does not exist"
+    exit 1
+fi
+
+# use uf2conv.py to send the firmware to the Pico
+if [ -f $PICO_DIR/build/main.uf2 ]; then
+    python3 $UF2CONV $PICO_DIR/build/main.uf2 -D
+    echo "Firmware sent to Pico"
+else
+    echo "Firmware not found"
+    exit 1
+fi
