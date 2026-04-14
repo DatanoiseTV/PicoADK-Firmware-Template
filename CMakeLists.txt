@@ -51,17 +51,29 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/picoadk/vult.cmake)
 add_library(picoadk_hal STATIC
     src/hal/system.cpp
     src/hal/audio.cpp
-    src/hal/audio_i2s.cpp
+    src/hal/audio_engine.cpp
     src/hal/controls.cpp
+    src/hal/encoders.cpp
+    src/hal/buttons.cpp
+    src/hal/mux.cpp
     src/hal/storage.cpp
     src/hal/display.cpp
     src/hal/hardware.cpp
     src/midi/midi.cpp
     src/midi/midi_usb.cpp
     src/midi/midi_uart.cpp
+    src/midi/general_handler.cpp
+    src/midi/launchpad.cpp
     src/usb/usb_descriptors.c
     src/usb/get_serial.c
+    src/usb/usb_device.cpp
+    src/usb/usb_host.cpp
+    src/usb/msc.cpp
     src/dsp/math.cpp
+    src/dsp/modules.cpp
+    src/dsp/sample_player.cpp
+    src/dsp/pd.cpp
+    src/hal/voicelink.cpp
 )
 
 if(PICOADK_BOARD STREQUAL "v2_rp2350")
@@ -116,7 +128,30 @@ target_link_libraries(picoadk_hal PUBLIC
 
 if(PICOADK_BOARD STREQUAL "v2_rp2350")
     target_link_libraries(picoadk_hal PUBLIC hardware_dcp)
+    if(PICOADK_ENABLE_SDIO)
+        include(${CMAKE_CURRENT_LIST_DIR}/cmake/picoadk/sdio.cmake)
+        if(TARGET picoadk_sdio_v2)
+            target_link_libraries(picoadk_hal PUBLIC picoadk_sdio_v2)
+            target_compile_definitions(picoadk_hal PUBLIC PICOADK_HAS_SDIO_RP2350=1)
+        endif()
+    endif()
 endif()
+
+if(PICOADK_ENABLE_SDFAT)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/picoadk/sdfat.cmake)
+    target_link_libraries(picoadk_hal PUBLIC picoadk_sdfat)
+    target_compile_definitions(picoadk_hal PUBLIC PICOADK_HAS_SDFAT=1)
+endif()
+
+if(PICOADK_LIBPD)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/picoadk/libpd.cmake)
+    target_link_libraries(picoadk_hal PUBLIC picoadk_libpd)
+    target_compile_definitions(picoadk_hal PUBLIC PICOADK_LIBPD=1)
+endif()
+
+# v2 PSRAM linker fragment is applied to the final executable in
+# examples/<app>/CMakeLists.txt — the HAL alone doesn't link an executable.
+set(PICOADK_PSRAM_LD "${CMAKE_CURRENT_LIST_DIR}/boards/picoadk_v2_psram.ld" CACHE FILEPATH "")
 
 # Generate any board PIO programs into the HAL.
 file(GLOB _picoadk_pio "${CMAKE_CURRENT_LIST_DIR}/src/hal/pio/*.pio")

@@ -1,13 +1,25 @@
-// PicoADK v3 — Vult monosynth example.
+// =============================================================================
+//  PicoADK v3 — Vult Monosynth Example
+// -----------------------------------------------------------------------------
+//  This is the original PicoADK v1/v2 Vult monosynth, reborn on the v3 HAL.
+//  Same DSP, same MIDI behaviour — but the firmware around it is rewritten
+//  from scratch and now runs on both PicoADK v1 (RP2040) and PicoADK v2
+//  (RP2350) from one source tree, with the v3 HAL handling the boring bits.
 //
-// Mirrors the behaviour of the legacy src/main.cpp but built on the v3 HAL:
-//   * Hardware::init()              — clocks, USB, MIDI, audio, controls
-//   * Audio::set_callback(audio_cb) — float planar callback at the configured rate
-//   * Midi::set_*()                 — single set of callbacks regardless of transport
+//  What this example shows:
+//    * `Hardware::init()`           — one call brings up clocks, USB, MIDI,
+//                                      audio, and controls.
+//    * `Audio::set_callback(...)`   — float-planar audio callback at the
+//                                      configured sample rate / block size.
+//    * `Midi::set_*()`              — unified MIDI dispatch regardless of
+//                                      transport (USB device + UART here;
+//                                      add UsbHost for keyboards).
+//    * `Controls::read_adc8(n)`     — MCP3208 channel n into the Vult DSP
+//                                      as a CV input.
 //
-// The DSP is exactly the same vultsrc/dsp.vult file the v1 firmware shipped
-// with; on RP2350 the Vult code is regenerated as float (CMake picks the
-// right -real flag automatically), on RP2040 it stays Q16 fixed-point.
+//  See examples/ for tighter, simpler scaffolding (`01_passthrough` is the
+//  smallest possible "make a sound" app).
+// =============================================================================
 
 #include "picoadk/picoadk.h"
 #include "vult.h"
@@ -19,74 +31,66 @@ using namespace picoadk;
 
 namespace {
 
+// ---- Vult DSP context (one global instance — this example is monophonic) ---
 Dsp_process_type g_ctx;
 
-void note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
-    if (velocity == 0) { Dsp_noteOff(g_ctx, note, channel); }
-    else               { Dsp_noteOn (g_ctx, note, velocity, channel); }
+// ---- MIDI callbacks --------------------------------------------------------
+void on_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
+    if (velocity == 0) Dsp_noteOff(g_ctx, note, channel);
+    else               Dsp_noteOn (g_ctx, note, velocity, channel);
     Controls::set_note_led(velocity > 0);
 }
-
-void note_off(uint8_t channel, uint8_t note, uint8_t /*velocity*/) {
+void on_note_off(uint8_t channel, uint8_t note, uint8_t /*velocity*/) {
     Dsp_noteOff(g_ctx, note, channel);
     Controls::set_note_led(false);
 }
-
-void cc(uint8_t channel, uint8_t controller, uint8_t value) {
-    Dsp_controlChange(g_ctx, controller, value, channel);
+void on_cc(uint8_t channel, uint8_t cc, uint8_t value) {
+    Dsp_controlChange(g_ctx, cc, value, channel);
 }
 
-void audio_cb(const float* const* /*in*/,
-              float* const* out,
-              std::size_t frames,
-              void* /*user*/) {
-    // CV inputs feed the Vult `process(cv0..cv3)` signature.
-    const auto cv0 = Controls::read_adc8(0);
-    const auto cv1 = Controls::read_adc8(1);
-    const auto cv2 = Controls::read_adc8(2);
-    const auto cv3 = Controls::read_adc8(3);
+// ---- Audio callback (runs at audio block rate) -----------------------------
+void audio_cb(const float* const* /*in*/, float* const* out, std::size_t frames, void*) {
+    // Read four CV inputs from the MCP3208. Cheap (~5 µs each at 20 MHz SPI).
+    const uint32_t cv0 = Controls::read_adc8(0);
+    const uint32_t cv1 = Controls::read_adc8(1);
+    const uint32_t cv2 = Controls::read_adc8(2);
+    const uint32_t cv3 = Controls::read_adc8(3);
 
     float* L = out[0];
     float* R = out[1];
+    constexpr float kQ16ToFloat = 1.0f / 65536.0f;
     for (std::size_t i = 0; i < frames; ++i) {
         Dsp_process(g_ctx, cv0, cv1, cv2, cv3);
-        L[i] = static_cast<float>(Dsp_process_ret_0(g_ctx)) * (1.0f / 65536.0f);
-        R[i] = static_cast<float>(Dsp_process_ret_1(g_ctx)) * (1.0f / 65536.0f);
+        L[i] = (float)Dsp_process_ret_0(g_ctx) * kQ16ToFloat;
+        R[i] = (float)Dsp_process_ret_1(g_ctx) * kQ16ToFloat;
     }
 }
 
-[[noreturn]] void midi_task(void*) {
-    for (;;) {
-        Midi::process();
-        vTaskDelay(pdMS_TO_TICKS(1));
-    }
-}
-
-[[noreturn]] void watchdog_task(void*) {
-    for (;;) {
-        System::feed_watchdog();
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-}
+// ---- Background tasks ------------------------------------------------------
+[[noreturn]] void midi_task(void*)     { for (;;) { Midi::process();           vTaskDelay(pdMS_TO_TICKS(1));  } }
+[[noreturn]] void watchdog_task(void*) { for (;;) { System::feed_watchdog();   vTaskDelay(pdMS_TO_TICKS(500));} }
 
 }  // namespace
 
 int main() {
     HardwareConfig hw;
     hw.audio.sample_rate_hz = 48000;
+    hw.audio.bit_depth      = AudioBitDepth::Bits32;
     hw.audio.block_size     = 32;
     hw.audio.direction      = AudioDirection::Out;
     hw.midi.inputs          = MidiTransport::Usb | MidiTransport::Uart;
     hw.midi.outputs         = MidiTransport::Usb;
     Hardware::init(hw);
 
+    // Vult DSP is generated by `picoadk_add_vult_dsp(...)` in CMakeLists.txt
+    // — Q16 fixed point on RP2040, float on RP2350 (board.cmake picks).
     Dsp_process_init(g_ctx);
     Dsp_default_init(g_ctx);
     Dsp_default(g_ctx);
 
-    Midi::set_note_on (note_on);
-    Midi::set_note_off(note_off);
-    Midi::set_cc      (cc);
+    Midi::set_note_on (on_note_on);
+    Midi::set_note_off(on_note_off);
+    Midi::set_cc      (on_cc);
 
     Audio::set_callback(audio_cb);
     Audio::start();
@@ -95,5 +99,5 @@ int main() {
     xTaskCreate(watchdog_task, "WDOG", 256,  nullptr, tskIDLE_PRIORITY + 1,     nullptr);
 
     vTaskStartScheduler();
-    for (;;) { __asm volatile("wfi"); }
+    for (;;) __asm volatile("wfi");
 }

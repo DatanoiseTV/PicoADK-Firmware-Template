@@ -1,79 +1,97 @@
 # PicoADK Firmware Template — v3
 
-Cross-board firmware template for the **PicoADK v1 (RP2040)** and **PicoADK v2 (RP2350)** audio dev kits. Provides a clean, modern HAL on top of the Pico SDK so the same application code can run on both boards: same audio callback signature, same MIDI dispatch, same control surface, same DSP types — the differences (FPU vs fixed-point, PSRAM, SDIO, M33 DSP intrinsics) are handled inside the HAL.
+> **A clean-slate rewrite.** v3 is a from-the-ground-up redesign of the PicoADK firmware template — same hardware, brand new HAL. One source tree builds for **PicoADK v1 (RP2040)** and **PicoADK v2 (RP2350)**. Same audio callback. Same MIDI dispatch. Same DSP types. The differences (Cortex-M33 FPU, PSRAM, SDIO, M33 DSP intrinsics) are handled inside the HAL so application code never has to ifdef.
 
-> **Status:** v3 is an active rewrite on the `v3-refactor` branch. The structure and public API land first; PIO engines, PSRAM, SDIO, the DSP module library and the libpd/sampler engines follow in subsequent phases. The legacy v1/v2 firmware remains intact on `main` and on the `RP235x*` branches.
+```
+                                                          ┌────────────────────┐
+                       ┌── audio cb ──→ DAC / I2S ────────│ runtime SR/bit/    │
+                       │                                  │ TDM out / in /     │
+                       │                                  │ duplex             │
+   USB-MIDI ──┐        │                                  └────────────────────┘
+   UART-MIDI ─┼─→ Midi ┤        ┌─→ pots / mux / scanner
+   USB host ──┘        │        │
+                       │   Hardware                       ┌────────────────────┐
+                       ├─→ Controls ── encoders / buttons │ smart updates,     │
+                       │                                  │ debounced, fast    │
+                       ├─→ Display ── u8g2 (SSD1306 …)    └────────────────────┘
+                       ├─→ Storage ── SdFat (FAT32/exFAT/LFN)
+                       ├─→ PSRAM ── TLSF allocator
+                       └─→ VoiceLink ── multi-board polyphony over UART
+```
+
+## What's new in v3
+
+* **One source tree, two boards.** `cmake -DPICOADK_BOARD=v1_rp2040` or `v2_rp2350`. The right pico-sdk port, FreeRTOS port, default clocks, Vult numeric type, and PSRAM/SDIO support are picked automatically.
+* **Audio engine that adapts at runtime.** Sample rate, bit depth (16/24/32), block size, and direction (output / input / **full duplex**) are `AudioConfig` fields, not compile-time decisions. **TDM4 / TDM8** + left/right-justified wire formats so codecs like the PCM3168 / AK4954 / TLV320 work without HAL changes.
+* **MIDI everywhere.** USB device, UART (5-pin DIN), and **USB host** (Launchpad / keyboards / controllers via `pico_pio_usb`) — all simultaneously, all with one callback set.
+* **General MIDI handler.** RPN/NRPN aggregation, 14-bit pitch bend with configurable range, channel-mode messages, MIDI clock + transport. Drop in a `Handler` struct of function pointers and you're done.
+* **Launchpad programmer-mode driver.** Grid-coordinate API for pads + buttons, RGB LEDs, palette colours. Diff-only updates batch into one sysex frame when ≥8 pads change — never resending the whole grid.
+* **USB composite device** picked at runtime: CDC (serial debug) + USB-MIDI (multi-cable) + MSC (mass-storage exposing internal flash, the SD card, or both as separate LUNs).
+* **Display via u8g2.** SSD1306 / SH1106 / SSD1309 with the full u8g2 font catalog and our `gfx::Canvas` sugar wrapping the common calls. Optional LVGL backend for TFT projects.
+* **Controls toolkit.** External MCP3208 ADC, internal SAR ADC, mux scanner (CD4051 / 74HC4067 chains, mixed with direct inputs), polled quadrature encoders (and a PIO-bank version coming), 1 kHz debounced buttons with hold + double-click.
+* **PSRAM with TLSF.** v2's 8 MB QSPI PSRAM is split into linker-reserved sections (`PICOADK_PSRAM_BSS` / `PICOADK_PSRAM_DATA`) plus a TLSF heap (`Psram::alloc`, placement-`new (PSRAM)`). v1 stubs out to the system heap so code compiles either way.
+* **SDIO 4-bit on v2** via the proven [`rabbitholecomputing/SDIO_RP2350`](https://github.com/rabbitholecomputing/SDIO_RP2350) driver, surfaced through SdFat with FAT32 / exFAT / long file name support.
+* **DSP that scales with the silicon.** `picoadk::dsp::Real` is `float` on v2 (M33 FPU) and Q16 fixed-point on v1. Hardware helpers wrap RP2040's hw divider + interp blocks and the RP2350's M33 SIMD + DCP coprocessor. CMSIS-DSP integration optional.
+* **DSP module library.** BLEP / wavetable / noise oscillators, ADSR, state-variable + ladder filters, saturator, wavefolder, delay, FDN reverb, compressor.
+* **Sampler module.** Stream samples from SD with prefetch ring, pitch-shift, optional time-stretch, looping, multisample key-mapping for "play any sample on any keyboard zone".
+* **Headless PureData.** Embed `libpd`, load patches from a memory buffer or SD, route through the audio callback. Optional via `-DPICOADK_LIBPD=ON`.
+* **VoiceLink.** Wire multiple PicoADKs together over a 3 Mbaud UART for distributed polyphony and "voice cards". Each board reports its own polyphony capacity; the master allocator (round-robin / oldest / quietest) routes notes accordingly. DMA-fed framing keeps the audio thread untouched.
+* **Pinned, supported deps.** `pico-sdk 2.2.0`, `pico-extras sdk-2.2.0`, the upstream `FreeRTOS-Kernel V11.3.0` (RPi-supported `ThirdParty/GCC/RP2040` SMP port for v1, `GCC/ARM_CM33_NTZ/non_secure` for v2), `pico-pio-usb`, `u8g2`. CMakePresets.json + `.vscode/` configured for the official Raspberry Pi Pico VS Code extension.
 
 ## Hardware
 
-* **PicoADK v1** — RP2040 dual-core Cortex-M0+, I²S DAC, MCP3208 ADC, USB-MIDI, 5-pin DIN MIDI.
-* **PicoADK v2** — RP2350A dual-core Cortex-M33 with single-precision FPU and DSP extensions, 4 MB flash, **8 MB QSPI PSRAM**, microSD with **SDIO 4-bit** support, USB-C, optocoupled MIDI in.
+| | PicoADK v1 | PicoADK v2 |
+|---|---|---|
+| MCU       | RP2040 (dual M0+) | RP2350A (dual M33 + FPU + DCP) |
+| Flash     | 4 MB QSPI         | 4 MB QSPI                       |
+| PSRAM     | —                 | 8 MB QSPI (TLSF heap)           |
+| SD        | SPI               | **SDIO 4-bit (high speed)**     |
+| MIDI      | USB + DIN         | USB + DIN + USB host (PIO USB)  |
+| ADC       | MCP3208 (SPI), 4×SAR | same                         |
+| Display   | SSD1306 I²C       | SSD1306 / TFT SPI               |
 
-The way-to-go hardware option is the [PicoADK](https://github.com/DatanoiseTV/PicoADK-Hardware).
+## Build
 
-## Layout
+```sh
+git clone --recursive https://github.com/DatanoiseTV/PicoADK-Firmware-Template
+cd PicoADK-Firmware-Template
 
-```
-boards/                 board-specific pin maps + feature flags (v1, v2)
-cmake/picoadk/          CMake helpers (board, FreeRTOS, Vult)
-include/picoadk/        public HAL headers
-  hal/                    audio, midi, controls, storage, psram, display,
-                          gfx, encoders, buttons, mux, usb_device, hardware
-  dsp/                    real (q16/float), math, modules, sample_player, pd
-src/
-  hal/                    HAL implementations
-  midi/                   MIDI transports (USB, UART, dispatcher)
-  usb/                    TinyUSB descriptors / serial number
-  dsp/                    DSP helpers
-  third_party/            vendored libraries (TLSF, libpd, SdFat, …)
-examples/
-  02_synth_vult/          the original Vult monosynth, ported to v3
-vultsrc/                  Vult DSP source (unchanged)
-lib/                      git submodules: pico-extras, vult, FreeRTOS-Kernel, …
-```
-
-## Building
-
-```
-git submodule update --init --recursive
-
-# v1 (RP2040)
-cmake -B build/v1 -DPICOADK_BOARD=v1_rp2040
+# PicoADK v1
+cmake --preset v1
 cmake --build build/v1
 
-# v2 (RP2350)
-cmake -B build/v2 -DPICOADK_BOARD=v2_rp2350
+# PicoADK v2
+cmake --preset v2
 cmake --build build/v2
 ```
 
-Pick a different example with `-DPICOADK_APP=examples/<name>`. Override the Vult numeric type with `-DPICOADK_VULT_REAL=float|fixed` and the engine sample rate with `-DPICOADK_VULT_SAMPLERATE=48000`.
+Pick a different example with `-DPICOADK_APP=examples/<name>`:
 
-## Designed-in capabilities
+| App | Description |
+|---|---|
+| `examples/00_template`   | Scaffold to copy when starting a new project. |
+| `examples/01_passthrough`| Smallest possible app — full-duplex I2S passthrough. |
+| `examples/02_synth_vult` | Original PicoADK Vult monosynth, ported to v3 (default). |
 
-* **Dual board** from one source tree. CMake selects the platform, FreeRTOS port, default clocks, Vult numeric type (Q16 on v1, float on v2), and PSRAM/SDIO support.
-* **Audio** — runtime-configurable sample rate (8 k–192 k), bit depth (16/24/32), block size, and direction (out / in / full duplex). Single callback signature whether you take floats or raw int32.
-* **MIDI** — USB and UART (5-pin DIN) simultaneously. One callback set, transport reported per message.
-* **USB composite** — CDC serial, USB-MIDI (multi-cable), and USB MSC exposing internal flash storage, the SD card, or both as separate LUNs.
-* **Controls** — MCP3208 SPI ADC, internal SAR ADC, multiplexed banks (CD4051 / 74HC4067), debounced buttons, fast PIO-driven encoder banks.
-* **Display** — u8g2-backed driver for SSD1306 / SH1106 / SSD1309 (DMA SPI on v2). Full u8g2 font catalog accessible via `Display::u8g2()`; `gfx::Canvas` wraps the common drawing calls. Optional LVGL backend opt-in.
-* **Storage** — SdFat with FAT32 / exFAT and long file names. SDIO 4-bit on v2, SPI fallback on v1.
-* **PSRAM** — TLSF allocator on v2 (~8 MB usable), `PICOADK_PSRAM_BSS` / placement-`new (PSRAM)` for static and dynamic placement. No-op fallbacks on v1 so code compiles either way.
-* **DSP toolkit** — `picoadk::dsp::Real` adapts between Q16 and float; hardware-accelerated math helpers (RP2040 hw divider + interp, M33 SIMD intrinsics, DCP for double precision); a module library covering oscillators, filters, envelopes, dynamics, delay, reverb.
-* **Sampler** — streaming or RAM-resident sample players, multisample key-mapping, pitch shift, loop, optional time-stretch.
-* **PureData** — headless libpd embedded; load patches from flash buffer or SD; route through the audio callback.
-* **VoiceLink** — wire several boards together over UART for distributed polyphony / hybrid synths / "voice cards". DMA-fed framing keeps the audio thread untouched.
-* **USB host** — plug in a Launchpad / MIDI keyboard / controller. Native single-port-role or PIO-second-port (`pico_pio_usb`) for simultaneous device + host.
-* **MIDI utilities** — RPN / NRPN aggregation, 14-bit pitch bend, channel-mode messages, MIDI clock; Launchpad programmer-mode driver with grid coordinates and RGB LED helpers.
+Override at configure time:
+* `-DPICOADK_VULT_REAL=float\|fixed` — Vult numeric type (auto-picks per board).
+* `-DPICOADK_VULT_SAMPLERATE=48000` — sample rate baked into Vult tables.
+* `-DPICOADK_ENABLE_SDFAT=ON` — enable SdFat backend (Phase 4).
+* `-DPICOADK_ENABLE_SDIO=ON` — pull in the RP2350 SDIO driver (v2 only).
+* `-DPICOADK_LIBPD=ON` — embed libpd.
 
 ## Application skeleton
 
 ```cpp
 #include "picoadk/picoadk.h"
+#include <FreeRTOS.h>
+#include <task.h>
+
 using namespace picoadk;
 
-void audio_cb(const float* const*, float* const* out, std::size_t frames, void*) {
+void audio_cb(const float* const* in, float* const* out, std::size_t frames, void*) {
     for (std::size_t i = 0; i < frames; ++i) {
-        out[0][i] = out[1][i] = 0.0f;
+        out[0][i] = out[1][i] = 0.0f;        // your DSP here
     }
 }
 
@@ -86,17 +104,38 @@ int main() {
 
     Audio::set_callback(audio_cb);
     Audio::start();
-
-    while (true) {
-        Midi::process();
-        System::feed_watchdog();
-    }
+    vTaskStartScheduler();
+    for (;;) __asm volatile("wfi");
 }
 ```
 
-## Migration
+## Layout
 
-The legacy `src/main.cpp` / `src/picoadk_hw.cpp` / `lib/audio` paths remain on `main` and on tags. The `v3-refactor` branch supersedes them with the layout above; `examples/02_synth_vult/main.cpp` reproduces the old Vult monosynth behaviour against the new API.
+```
+boards/                   board pin maps + feature flags + pico-sdk board headers
+cmake/picoadk/            board.cmake, freertos.cmake, vult.cmake, sdio.cmake,
+                          sdfat.cmake, libpd.cmake
+include/picoadk/          public HAL — one header per subsystem
+  hal/                       audio, midi, controls, storage, psram, gfx,
+                             display, encoders, buttons, mux, usb_device,
+                             usb_host, voicelink, hardware
+  midi/                      general_handler (NRPN/RPN/PB), launchpad
+  dsp/                       real (Q16/float), math, modules, sample_player, pd
+src/                      implementations (PIO, DMA, IRQ, conversion)
+  hal/pio/                   PIO programs (i2s_stereo, tdm, sdio_4bit, …)
+  third_party/               vendored libraries (TLSF, …)
+examples/                 ready-to-build apps
+lib/                      submodules: pico-sdk 2.2.0, pico-extras sdk-2.2.0,
+                          FreeRTOS-Kernel V11.3.0, pico-pio-usb, u8g2, vult
+```
+
+## Migration from v1/v2 firmware
+
+The legacy `src/main.cpp` / `picoadk_hw` / `lib/audio` / `lib/oled` paths remain on `main` and on the `RP235x*` branches. The v3 layout supersedes them with the table above; `examples/02_synth_vult/main.cpp` reproduces the original Vult monosynth behaviour against the new HAL. None of the legacy code is wired into the v3 build — the rewrite is total.
+
+## Status & roadmap
+
+Phase 0 (foundation, structure, public API) and Phase 1 (audio engine + math + PSRAM + controls + USB composite + USB host + MIDI handlers + VoiceLink) are implemented. Hardware bring-up (PIO timing, SDIO, USB host enumeration, PSRAM init) is the obvious next step and needs real boards on the bench. CI matrix building both targets and a docs site round out Phase 5.
 
 ## Community
 

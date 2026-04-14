@@ -1,112 +1,126 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
+// PicoADK TinyUSB configuration.
+//
+// =============================================================================
+// Layout
+// -----------------------------------------------------------------------------
+// 1.  Common  — MCU/RHPort/OS knobs that the pico-sdk + TinyUSB integration
+//               expect to find.
+// 2.  Device  — buffer/endpoint sizes for every class we MIGHT advertise.
+//               Whether a class is *actually* enumerated is decided at
+//               runtime by `picoadk::Usb::configure()` building the
+//               descriptor blob in `usb_descriptors.c`.
+// 3.  Host    — only compiled when `PICOADK_USB_HOST_ENABLED` is set
+//               (Phase 1e). Turning this on adds ~20 KB to the firmware.
+// 4.  App overrides — `picoadk_tusb_overrides.h` is included if the user
+//               provides one. Drop a file with that name on the include
+//               path to override anything below without forking this file.
+//
+// All sizes assume full-speed (12 Mbit/s); high-speed RP2040/RP2350 doesn't
+// exist yet so the FS bumps are unconditional.
+// =============================================================================
 
 #ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
-//--------------------------------------------------------------------
-// COMMON CONFIGURATION
-//--------------------------------------------------------------------
-
-// defined by board.mk
+// --- 1. Common ---------------------------------------------------------------
 #ifndef CFG_TUSB_MCU
-  #error CFG_TUSB_MCU must be defined
-#endif
-
-// RHPort number used for device can be defined by board.mk, default to port 0
-#ifndef BOARD_DEVICE_RHPORT_NUM
-  #define BOARD_DEVICE_RHPORT_NUM     0
-#endif
-
-// RHPort max operational speed can defined by board.mk
-// Default to Highspeed for MCU with internal HighSpeed PHY (can be port specific), otherwise FullSpeed
-#ifndef BOARD_DEVICE_RHPORT_SPEED
-  #if (CFG_TUSB_MCU == OPT_MCU_LPC18XX || CFG_TUSB_MCU == OPT_MCU_LPC43XX || CFG_TUSB_MCU == OPT_MCU_MIMXRT10XX || \
-       CFG_TUSB_MCU == OPT_MCU_NUC505  || CFG_TUSB_MCU == OPT_MCU_CXD56)
-    #define BOARD_DEVICE_RHPORT_SPEED   OPT_MODE_HIGH_SPEED
-  #else
-    #define BOARD_DEVICE_RHPORT_SPEED   OPT_MODE_FULL_SPEED
-  #endif
-#endif
-
-// Device mode with rhport and speed defined by board.mk
-#if   BOARD_DEVICE_RHPORT_NUM == 0
-  #define CFG_TUSB_RHPORT0_MODE     (OPT_MODE_DEVICE | BOARD_DEVICE_RHPORT_SPEED)
-#elif BOARD_DEVICE_RHPORT_NUM == 1
-  #define CFG_TUSB_RHPORT1_MODE     (OPT_MODE_DEVICE | BOARD_DEVICE_RHPORT_SPEED)
-#else
-  #error "Incorrect RHPort configuration"
+#  error "CFG_TUSB_MCU must be defined (pico-sdk should set this via CMake)"
 #endif
 
 #ifndef CFG_TUSB_OS
-#define CFG_TUSB_OS               OPT_OS_NONE
+#  define CFG_TUSB_OS                       OPT_OS_FREERTOS
 #endif
 
-// CFG_TUSB_DEBUG is defined by compiler in DEBUG build
-// #define CFG_TUSB_DEBUG           0
+#ifndef BOARD_DEVICE_RHPORT_NUM
+#  define BOARD_DEVICE_RHPORT_NUM           0
+#endif
+#ifndef BOARD_DEVICE_RHPORT_SPEED
+#  define BOARD_DEVICE_RHPORT_SPEED         OPT_MODE_FULL_SPEED
+#endif
+#define CFG_TUSB_RHPORT0_MODE               (OPT_MODE_DEVICE | BOARD_DEVICE_RHPORT_SPEED)
 
-/* USB DMA on some MCUs can only access a specific SRAM region with restriction on alignment.
- * Tinyusb use follows macros to declare transferring memory so that they can be put
- * into those specific section.
- * e.g
- * - CFG_TUSB_MEM SECTION : __attribute__ (( section(".usb_ram") ))
- * - CFG_TUSB_MEM_ALIGN   : __attribute__ ((aligned(4)))
- */
 #ifndef CFG_TUSB_MEM_SECTION
-#define CFG_TUSB_MEM_SECTION
+#  define CFG_TUSB_MEM_SECTION
 #endif
-
 #ifndef CFG_TUSB_MEM_ALIGN
-#define CFG_TUSB_MEM_ALIGN          __attribute__ ((aligned(4)))
+#  define CFG_TUSB_MEM_ALIGN                __attribute__((aligned(4)))
 #endif
 
-//--------------------------------------------------------------------
-// DEVICE CONFIGURATION
-//--------------------------------------------------------------------
+// Logging — turn up to 2/3 from CMake (-DCFG_TUSB_DEBUG=2) when bringing up
+// new descriptors. Default off so production builds don't spam stdout.
+#ifndef CFG_TUSB_DEBUG
+#  define CFG_TUSB_DEBUG                    0
+#endif
+
+// --- 2. Device classes -------------------------------------------------------
+//
+// CFG_TUD_<CLASS> = 1 *compiles in* the class. The descriptor builder picks
+// at enumeration time which classes to advertise; disabled-at-runtime classes
+// cost a few KB of compiled-but-unused code and zero RAM.
+//
+// To strip a class entirely from the binary, override these from CMake (e.g.
+// `target_compile_definitions(picoadk_app PRIVATE CFG_TUD_MSC=0)` will save
+// ~6 KB of MSC code on synth-only builds).
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE
-#define CFG_TUD_ENDPOINT0_SIZE    64
+#  define CFG_TUD_ENDPOINT0_SIZE            64
 #endif
 
-//------------- CLASS -------------//
-#define CFG_TUD_CDC               0
-#define CFG_TUD_MSC               0
-#define CFG_TUD_HID               0
-#define CFG_TUD_MIDI              1
-#define CFG_TUD_VENDOR            0
+#ifndef CFG_TUD_CDC
+#  define CFG_TUD_CDC                       1
+#endif
+#ifndef CFG_TUD_MIDI
+#  define CFG_TUD_MIDI                      1
+#endif
+#ifndef CFG_TUD_MSC
+#  define CFG_TUD_MSC                       1
+#endif
+#ifndef CFG_TUD_HID
+#  define CFG_TUD_HID                       0
+#endif
+#ifndef CFG_TUD_VENDOR
+#  define CFG_TUD_VENDOR                    0
+#endif
 
-// MIDI FIFO size of TX and RX
-#define CFG_TUD_MIDI_RX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
-#define CFG_TUD_MIDI_TX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
+#define CFG_TUD_CDC_RX_BUFSIZE              256
+#define CFG_TUD_CDC_TX_BUFSIZE              256
+#define CFG_TUD_CDC_EP_BUFSIZE              64
+
+#define CFG_TUD_MIDI_RX_BUFSIZE             256
+#define CFG_TUD_MIDI_TX_BUFSIZE             256
+#define CFG_TUD_MIDI_EP_BUFSIZE             64
+
+#define CFG_TUD_MSC_EP_BUFSIZE              512
+
+// --- 3. Host stack (Phase 1e) ------------------------------------------------
+//
+// Compiled in only when the build defines PICOADK_USB_HOST_ENABLED — leaving
+// it off saves the ~20 KB the host stack costs.
+
+#ifdef PICOADK_USB_HOST_ENABLED
+#  define CFG_TUH_ENABLED                   1
+#  define CFG_TUH_MAX_SPEED                 OPT_MODE_FULL_SPEED
+#  define CFG_TUH_RPI_PIO_USB               1     // run host on PIO so device port stays up
+#  define CFG_TUH_HUB                       1     // controllers often sit behind a hub
+#  define CFG_TUH_DEVICE_MAX                (CFG_TUH_HUB ? 4 : 1)
+#  define CFG_TUH_ENUMERATION_BUFSIZE       256
+
+#  define CFG_TUH_MIDI                      1
+#  define CFG_TUH_HID                       0
+#  define CFG_TUH_CDC                       0
+#  define CFG_TUH_MSC                       0
+#endif
+
+// --- 4. App overrides --------------------------------------------------------
+#if __has_include("picoadk_tusb_overrides.h")
+#  include "picoadk_tusb_overrides.h"
+#endif
 
 #ifdef __cplusplus
- }
+}
 #endif
-
-#endif /* _TUSB_CONFIG_H_ */
+#endif  // _TUSB_CONFIG_H_

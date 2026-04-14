@@ -1,0 +1,123 @@
+; PicoADK TDM (PCM) — multi-slot frame, output and input.
+;
+; Frame layout (slot_width = 32, slots_per_frame = 4 or 8):
+;
+;   FSYNC  ___|‾‾‾‾|________________________ ...
+;   BCK    .---.---.---.---.---.---.---.--- ...
+;   DATA   <slot0><slot1><slot2><slot3> ... <slotN-1>
+;
+; FSYNC is high for one BCK (slot 0), then low for the rest of the frame.
+; Slots are 32 bits wide on the wire; software pads/masks 16/24-bit data.
+;
+; The slot count is encoded as a side-set pulse + a counter that reloads from
+; ISR (set via `mov isr, x` at init time). This lets one PIO program serve
+; both TDM4 and TDM8 with no recompile.
+;
+; Side-set pins (2):
+;   bit 0 = BCK
+;   bit 1 = FSYNC
+
+.program picoadk_tdm_out
+.side_set 2
+
+frame_start:
+    ; First bit of slot 0 — pulse FSYNC high for this BCK only.
+    out pins, 1   side 0b11
+    jmp slot_body side 0b01
+
+slot_body:
+    set x, 30     side 0b00            ; 31 bits remain in this slot
+bit_loop:
+    out pins, 1   side 0b00
+    jmp x-- bit_loop side 0b01
+
+    ; Decrement frame counter (loaded from y -> isr at config time).
+    ; If non-zero, run another slot; if zero, restart the frame.
+    mov x, isr    side 0b00            ; refill the slot bit count? No — see below.
+public picoadk_tdm_out_entry_point:
+    jmp y-- slot_body side 0b00
+    mov y, isr    side 0b00            ; refill: y = slots-2 (so we ran slots-1 extra slots)
+    jmp frame_start side 0b00
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void picoadk_tdm_out_program_init(
+        PIO pio, uint sm, uint offset,
+        uint data_pin, uint clock_pin_base,
+        uint sample_rate_hz, uint slots_per_frame) {
+    pio_sm_config c = picoadk_tdm_out_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, data_pin, 1);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_out_shift(&c, false /*shift_left*/, true /*autopull*/, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    // BCK = sample_rate * slots_per_frame * 32. PIO needs 2 cycles per BCK.
+    float div = (float)clock_get_hz(clk_sys) /
+                ((float)sample_rate_hz * (float)slots_per_frame * 32.0f * 2.0f);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    pio_gpio_init(pio, data_pin);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+
+    // Stash slots-2 in ISR so the program can reload y.
+    pio_sm_put_blocking(pio, sm, slots_per_frame - 2);
+    pio_sm_exec(pio, sm, pio_encode_pull(false, true));    // OSR <- TX FIFO
+    pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+    pio_sm_exec(pio, sm, pio_encode_mov(pio_y, pio_isr));
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+.program picoadk_tdm_in
+.side_set 2
+
+frame_start:
+    in pins, 1    side 0b11
+    jmp slot_body side 0b01
+slot_body:
+    set x, 30     side 0b00
+bit_loop:
+    in pins, 1    side 0b00
+    jmp x-- bit_loop side 0b01
+    mov x, isr    side 0b00
+public picoadk_tdm_in_entry_point:
+    jmp y-- slot_body side 0b00
+    mov y, isr    side 0b00
+    jmp frame_start side 0b00
+
+% c-sdk {
+static inline void picoadk_tdm_in_program_init(
+        PIO pio, uint sm, uint offset,
+        uint data_pin, uint clock_pin_base,
+        uint sample_rate_hz, uint slots_per_frame) {
+    pio_sm_config c = picoadk_tdm_in_program_get_default_config(offset);
+    sm_config_set_in_pins(&c, data_pin);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_in_shift(&c, false, true, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+
+    float div = (float)clock_get_hz(clk_sys) /
+                ((float)sample_rate_hz * (float)slots_per_frame * 32.0f * 2.0f);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_gpio_init(pio, data_pin);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+
+    pio_sm_put_blocking(pio, sm, slots_per_frame - 2);
+    pio_sm_exec(pio, sm, pio_encode_pull(false, true));
+    pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+    pio_sm_exec(pio, sm, pio_encode_mov(pio_y, pio_isr));
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

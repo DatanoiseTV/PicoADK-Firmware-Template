@@ -1,0 +1,106 @@
+; PicoADK I2S — stereo, output / input / full-duplex variants.
+;
+; Slot width is fixed at 32 bits on the wire (BCK = 64 * sample_rate).
+; The host pads or masks 16/24/32-bit user data into the 32-bit slot before
+; pushing it into the FIFO. This keeps PIO simple and the bit-depth runtime
+; switchable without re-uploading programs.
+;
+; Side-set pin layout (2 pins):
+;   bit 0 = BCK     (clock_pin_base + 0)
+;   bit 1 = WS/LRCK (clock_pin_base + 1)
+;
+; FIFO word format (TX, output):
+;   | 31 .. 0 | left  sample (WS=0)
+;   | 31 .. 0 | right sample (WS=1)
+;
+; FIFO word format (RX, input): same — pairs of 32-bit words pushed.
+
+; ----- Output (PIO_OUT)  -------------------------------------------------
+.program picoadk_i2s_out
+.side_set 2
+
+                       ;       /--- WS
+                       ;       |/-- BCK
+bit_left_loop:         ;       ||
+    out pins, 1   side 0b00     ; while WS low, clock data
+    jmp x-- bit_left_loop side 0b01
+    out pins, 1   side 0b10     ; rising edge of WS, last bit
+    set x, 30     side 0b11     ; reload counter (31 bits + jmp = 32)
+
+bit_right_loop:
+    out pins, 1   side 0b10
+    jmp x-- bit_right_loop side 0b11
+    out pins, 1   side 0b00     ; falling edge of WS
+public picoadk_i2s_out_entry_point:
+    set x, 30     side 0b01
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void picoadk_i2s_out_program_init(
+        PIO pio, uint sm, uint offset,
+        uint data_pin, uint clock_pin_base, uint sample_rate_hz) {
+    pio_sm_config c = picoadk_i2s_out_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, data_pin, 1);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_out_shift(&c, false /*shift_left*/, true /*autopull*/, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    // System clock / (sample_rate * 64 BCKs/frame * 2 PIO cycles/BCK).
+    float div = (float)clock_get_hz(clk_sys) / (sample_rate_hz * 64.0f * 2.0f);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    pio_sm_set_pins(pio, sm, 0);
+    pio_gpio_init(pio, data_pin);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset + picoadk_i2s_out_offset_picoadk_i2s_out_entry_point));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+; ----- Input (PIO_IN)  ---------------------------------------------------
+.program picoadk_i2s_in
+.side_set 2
+
+bit_left_loop:
+    in pins, 1    side 0b00
+    jmp x-- bit_left_loop side 0b01
+    in pins, 1    side 0b10
+    set x, 30     side 0b11
+
+bit_right_loop:
+    in pins, 1    side 0b10
+    jmp x-- bit_right_loop side 0b11
+    in pins, 1    side 0b00
+public picoadk_i2s_in_entry_point:
+    set x, 30     side 0b01
+
+% c-sdk {
+static inline void picoadk_i2s_in_program_init(
+        PIO pio, uint sm, uint offset,
+        uint data_pin, uint clock_pin_base, uint sample_rate_hz) {
+    pio_sm_config c = picoadk_i2s_in_program_get_default_config(offset);
+    sm_config_set_in_pins(&c, data_pin);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_in_shift(&c, false /*shift_left*/, true /*autopush*/, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+
+    float div = (float)clock_get_hz(clk_sys) / (sample_rate_hz * 64.0f * 2.0f);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false /*input*/);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true /*output*/);
+    pio_gpio_init(pio, data_pin);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset + picoadk_i2s_in_offset_picoadk_i2s_in_entry_point));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

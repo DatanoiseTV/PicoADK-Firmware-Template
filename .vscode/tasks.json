@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "cmake",
+            "command": "build",
+            "problemMatcher": [ "$gcc" ],
+            "group": { "kind": "build", "isDefault": true }
+        },
+        {
+            "label": "Configure (v1)",
+            "type": "shell",
+            "command": "cmake --preset v1",
+            "problemMatcher": []
+        },
+        {
+            "label": "Configure (v2)",
+            "type": "shell",
+            "command": "cmake --preset v2",
+            "problemMatcher": []
+        }
+    ]
+}
