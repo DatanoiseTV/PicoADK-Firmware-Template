@@ -1,22 +1,25 @@
-// Display HAL stub — Phase 1b implements the SSD1306/SH1106/SSD1309 backend
-// and the gfx::Canvas frame buffer. For Phase 0 we expose the API surface
-// only.
+// Display HAL stub — Phase 1b wires u8g2 in for real (panel drivers, DMA SPI,
+// I2C HAL callbacks). Phase 0 only exposes the API surface; the u8g2 instance
+// lives here so user code can already compile against it.
 
 #include "picoadk/hal/display.h"
+#include "picoadk/hal/gfx.h"
 
 namespace picoadk::Display {
 
 namespace {
-uint8_t       g_buf[128 * 64 / 8];
-gfx::Canvas   g_canvas{g_buf, 128, 64};
-bool          g_present = false;
+u8g2_t      g_u8g2;
+bool        g_present = false;
+gfx::Canvas g_canvas{&g_u8g2};
 }
 
-bool init(const DisplayConfig&) { return false; }
-bool present_avail()            { return g_present; }
-gfx::Canvas& canvas()           { return g_canvas; }
-void present()                  {}
-void clear()                    { g_canvas.clear(); present(); }
-void set_contrast(uint8_t)      {}
+bool        init(const DisplayConfig&) { return false; }
+bool        present_avail()            { return g_present; }
+u8g2_t&     u8g2()                     { return g_u8g2; }
+gfx::Canvas& canvas()                  { return g_canvas; }
+void        present()                  {}
+void        clear()                    { u8g2_ClearBuffer(&g_u8g2); present(); }
+void        set_contrast(uint8_t c)    { u8g2_SetContrast(&g_u8g2, c); }
+bool        present_busy()             { return false; }
 
 }  // namespace picoadk::Display

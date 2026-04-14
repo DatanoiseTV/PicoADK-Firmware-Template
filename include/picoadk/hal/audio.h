@@ -38,14 +38,33 @@ enum class AudioFormat : uint8_t {
     Int32Planar      = 2,    // raw I2S samples, no conversion
 };
 
+// Frame format on the wire. The PIO state machines are parameterised by
+// `slots_per_frame` and `slot_width` so codecs / ADCs / DACs that don't
+// speak vanilla 2-slot I2S still work.
+enum class AudioFrameFormat : uint8_t {
+    I2S          = 0,    // Philips I2S (data shifted 1 BCK after WS edge)
+    LeftJustified,       // No 1-BCK delay; MSB on the WS edge
+    RightJustified,
+    TDM,                 // multi-slot frame, slots_per_frame > 2
+};
+
+enum class AudioPolarity : uint8_t { Normal, Inverted };
+
 struct AudioConfig {
-    uint32_t        sample_rate_hz = 48000;
-    AudioBitDepth   bit_depth      = AudioBitDepth::Bits32;
-    uint16_t        block_size     = 32;     // frames per callback
-    uint8_t         num_channels   = 2;
-    AudioDirection  direction      = AudioDirection::Out;
-    AudioFormat     format         = AudioFormat::FloatPlanar;
-    uint8_t         num_buffers    = 3;      // ring depth
+    uint32_t          sample_rate_hz   = 48000;
+    AudioBitDepth     bit_depth        = AudioBitDepth::Bits32;
+    uint16_t          block_size       = 32;     // frames per callback
+    uint8_t           num_channels     = 2;      // user-visible channels (≤ slots_per_frame)
+    AudioDirection    direction        = AudioDirection::Out;
+    AudioFormat       format           = AudioFormat::FloatPlanar;
+    uint8_t           num_buffers      = 3;      // ring depth
+
+    // Wire format. Defaults give vanilla stereo I2S.
+    AudioFrameFormat  frame_format     = AudioFrameFormat::I2S;
+    uint8_t           slots_per_frame  = 2;      // 2 = stereo I2S; 4/8 = TDM
+    uint8_t           slot_width       = 32;     // bits per slot on the wire
+    AudioPolarity     bclk_polarity    = AudioPolarity::Normal;
+    AudioPolarity     ws_polarity      = AudioPolarity::Normal;
 };
 
 // Float planar callback (default). `in` may be nullptr when direction == Out.

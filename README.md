@@ -55,7 +55,7 @@ Pick a different example with `-DPICOADK_APP=examples/<name>`. Override the Vult
 * **MIDI** — USB and UART (5-pin DIN) simultaneously. One callback set, transport reported per message.
 * **USB composite** — CDC serial, USB-MIDI (multi-cable), and USB MSC exposing internal flash storage, the SD card, or both as separate LUNs.
 * **Controls** — MCP3208 SPI ADC, internal SAR ADC, multiplexed banks (CD4051 / 74HC4067), debounced buttons, fast PIO-driven encoder banks.
-* **Display** — SSD1306 / SH1106 / SSD1309 panels with a shared `gfx::Canvas` (lines, rects, circles, text, blits, double-buffered DMA present).
+* **Display** — u8g2-backed driver for SSD1306 / SH1106 / SSD1309 (DMA SPI on v2). Full u8g2 font catalog accessible via `Display::u8g2()`; `gfx::Canvas` wraps the common drawing calls. Optional LVGL backend opt-in.
 * **Storage** — SdFat with FAT32 / exFAT and long file names. SDIO 4-bit on v2, SPI fallback on v1.
 * **PSRAM** — TLSF allocator on v2 (~8 MB usable), `PICOADK_PSRAM_BSS` / placement-`new (PSRAM)` for static and dynamic placement. No-op fallbacks on v1 so code compiles either way.
 * **DSP toolkit** — `picoadk::dsp::Real` adapts between Q16 and float; hardware-accelerated math helpers (RP2040 hw divider + interp, M33 SIMD intrinsics, DCP for double precision); a module library covering oscillators, filters, envelopes, dynamics, delay, reverb.

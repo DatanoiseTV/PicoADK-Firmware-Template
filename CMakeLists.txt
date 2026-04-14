@@ -80,7 +80,13 @@ target_include_directories(picoadk_hal PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/boards
     ${CMAKE_CURRENT_LIST_DIR}/src
     ${CMAKE_CURRENT_LIST_DIR}/src/third_party/tlsf
+    ${CMAKE_CURRENT_LIST_DIR}/lib/u8g2/csrc
 )
+
+# u8g2 — vendored panel driver / fonts / primitives. We compile its C
+# sources straight into picoadk_hal so apps don't need to think about it.
+file(GLOB _picoadk_u8g2_src "${CMAKE_CURRENT_LIST_DIR}/lib/u8g2/csrc/*.c")
+target_sources(picoadk_hal PRIVATE ${_picoadk_u8g2_src})
 
 target_compile_definitions(picoadk_hal PUBLIC
     ${PICOADK_BOARD_DEF}

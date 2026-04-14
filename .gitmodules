@@ -16,3 +16,6 @@
 [submodule "lib/pico-pio-usb"]
 	path = lib/pico-pio-usb
 	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
+[submodule "lib/u8g2"]
+	path = lib/u8g2
+	url = https://github.com/olikraus/u8g2.git
