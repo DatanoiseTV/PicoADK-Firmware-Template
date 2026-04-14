@@ -18,7 +18,7 @@ git clone --recursive https://github.com/DatanoiseTV/PicoADK-Firmware-Template
 cmake --preset v2 && cmake --build build/v2
 ```
 
-→ `build/v2/app/picoadk_app.uf2` · drag-and-drop to BOOTSEL · done.
+Output: `build/v2/app/picoadk_app.uf2`. Drag-and-drop to the BOOTSEL drive and you're running.
 
 ---
 
@@ -56,7 +56,7 @@ That's the whole program. Boots, plays a sine wave, accepts MIDI on USB and DIN.
 
 ## What you get
 
-### 🎚 Audio you can configure at runtime
+### Audio you can configure at runtime
 ```cpp
 hw.audio.sample_rate_hz = 96000;        // 8 k – 192 k
 hw.audio.bit_depth      = AudioBitDepth::Bits24;
@@ -66,14 +66,14 @@ hw.audio.slots_per_frame = 8;           // TDM4 / TDM8 for codecs like PCM3168
 ```
 PIO + DMA engine. Off-IRQ FreeRTOS audio task. Nothing hardcoded.
 
-### 🎹 MIDI everywhere, one callback
+### MIDI everywhere, one callback
 ```cpp
 hw.midi.inputs = MidiTransport::Usb | MidiTransport::Uart | MidiTransport::UsbHost;
 Midi::set_note_on([](uint8_t ch, uint8_t note, uint8_t vel) { /* … */ });
 ```
 USB device, UART (DIN), USB host (Launchpad / keyboards) — all simultaneous, all routed through the same callbacks. NRPN/RPN aggregation, 14-bit pitch bend, MIDI clock, channel mode messages — handled.
 
-### 🔌 USB built at runtime
+### USB built at runtime
 ```cpp
 UsbConfig usb;
 usb.classes      = UsbClass::Cdc | UsbClass::Midi | UsbClass::Msc;
@@ -82,7 +82,7 @@ Usb::configure(usb);
 ```
 CDC for serial debug. USB-MIDI multi-cable. MSC exposing internal flash and/or the SD card as separate LUNs.
 
-### 🧮 DSP that scales with the silicon
+### DSP that scales with the silicon
 ```cpp
 using namespace picoadk::dsp;
 LadderFilter filt;         filt.reset(48000.0f);
@@ -91,19 +91,19 @@ FdnReverb    verb;         verb.configure(3.5f, 48000.0f);          // PSRAM if 
 ```
 `Real` is `float` on RP2350 (FPU) and Q16 fixed-point on RP2040. Hardware-accelerated math (RP2040 hw divider + interp; M33 SIMD + DCP). FX with serious memory hunger live in PSRAM automatically.
 
-### 🎛 Controls toolkit
+### Controls toolkit
 - MCP3208 SPI ADC (8 channels, 12-bit) and the internal SAR ADC.
 - Multiplexer banks (CD4051 / 74HC4067) intermixed with direct inputs in one scan table.
 - Polled quadrature encoders with debounced buttons.
 - 1 kHz timer-driven button scan with hold + double-click events.
 
-### 🖥 Display via [u8g2](https://github.com/olikraus/u8g2)
+### Display via [u8g2](https://github.com/olikraus/u8g2)
 SSD1306 / SH1106 / SSD1309 over I²C or SPI. The full u8g2 font catalog. `gfx::Canvas` C++ wrapper for one-liners. (Optional LVGL backend planned for TFT projects.)
 
-### 💾 Storage that knows long filenames
+### Storage that knows long filenames
 [SdFat](https://github.com/greiman/SdFat) with FAT32 / exFAT / **LFN**. SDIO 4-bit on v2 ([rabbitholecomputing/SDIO_RP2350](https://github.com/rabbitholecomputing/SDIO_RP2350)), SPI on v1.
 
-### 🧠 PSRAM with a real allocator
+### PSRAM with a real allocator
 ```cpp
 auto* big_buffer  = (float*)Psram::alloc(2 * 1024 * 1024);
 PICOADK_PSRAM_BSS float wavetable[1 << 16];
@@ -111,24 +111,24 @@ SamplePlayer p; p.set_source(MemorySampleSource::load_wav_from_sd("/grand.wav"))
 ```
 TLSF heap over the v2's 8 MB QSPI PSRAM. Linker section macros (`PICOADK_PSRAM_BSS`, `PICOADK_PSRAM_DATA`). Placement-`new (PSRAM)`. Stubbed to system heap on v1 so code stays portable.
 
-### 🎼 PureData
+### PureData
 Optional [libpd](https://github.com/libpd/libpd) embedded — load patches from flash or SD, route them through the audio callback. Enable with `-DPICOADK_LIBPD=ON`.
 
-### 🔗 VoiceLink — multi-board polyphony
+### VoiceLink — multi-board polyphony
 Wire several PicoADKs over a 3 Mbaud UART for "voice cards". Auto-enumerated chain. Each board declares its polyphony; the master allocates voices using round-robin, oldest, or quietest policies. DMA-fed framing keeps the audio thread untouched.
 
-### 🔧 FreeRTOS SMP, both boards
+### FreeRTOS SMP, both boards
 Raspberry Pi's curated kernel fork. `xTaskCreatePinnedToCore()` works ESP32-style. Stdio routes to UART by default and USB-CDC when you ask for it.
 
 ---
 
 ## Examples
 
-| | Folder | What it shows |
-|---|---|---|
-| 🆕 | `examples/00_template`    | Copy-and-edit scaffold with audio + MIDI + controls + USB composite already wired. |
-| 🔁 | `examples/01_passthrough` | Minimal full-duplex passthrough. ~25 lines. |
-| 🎹 | `examples/02_synth_vult`  | The original PicoADK Vult monosynth, ported to v3. |
+| Folder | What it shows |
+|---|---|
+| `examples/00_template`    | Copy-and-edit scaffold with audio + MIDI + controls + USB composite already wired. |
+| `examples/01_passthrough` | Minimal full-duplex passthrough. ~25 lines. |
+| `examples/02_synth_vult`  | The original PicoADK Vult monosynth, ported to v3. |
 
 ```sh
 cmake --preset v2 -DPICOADK_APP=examples/00_template
@@ -171,7 +171,7 @@ cmake --preset v2-debug          # ... Debug
 | **ADC**     | MCP3208 (SPI)     | MCP3208 (SPI)                   |
 | **Display** | SSD1306 I²C       | SSD1306 / TFT SPI               |
 
-→ [PicoADK Hardware](https://github.com/DatanoiseTV/PicoADK-Hardware)
+[PicoADK Hardware repo](https://github.com/DatanoiseTV/PicoADK-Hardware)
 
 ---
 

@@ -40,15 +40,18 @@ bool init(const UsbHostConfig& cfg) {
     if (g_inited) return true;
     g_cfg = cfg;
 #if CFG_TUH_ENABLED
+    // Pin assignment for the PIO host port — pico_pio_usb expects D+ on the
+    // configured pin and D- on (pin+1). The native port (rhport 0) takes
+    // priority; the PIO port becomes rhport 1 by convention.
+    const uint8_t rhport = cfg.use_pio_usb ? 1 : 0;
+#  ifdef PIO_USB_DEFAULT_CONFIG
     if (cfg.use_pio_usb) {
-        // pico_pio_usb config is set via tuh_configure() before tuh_init().
-        // The exact knobs vary by tinyusb version; the defaults work on v2
-        // when the pin pair is contiguous.
-        tuh_init(BOARD_TUH_RHPORT);
-    } else {
-        tuh_init(0);    // native port — caller is responsible for not also
-                        // running the device stack.
+        pio_usb_configuration_t pio_cfg = PIO_USB_DEFAULT_CONFIG;
+        pio_cfg.pin_dp = cfg.pio_usb_dp_pin;
+        tuh_configure(rhport, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &pio_cfg);
     }
+#  endif
+    tuh_init(rhport);
     g_role   = UsbRole::Host;
     g_inited = true;
     if (!g_task)
