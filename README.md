@@ -122,9 +122,12 @@ Raspberry Pi's curated kernel fork. `xTaskCreatePinnedToCore()` works ESP32-styl
 
 | Folder | What it shows |
 |---|---|
-| `examples/00_template`    | Copy-and-edit scaffold with audio + MIDI + controls + USB composite already wired. |
-| `examples/01_passthrough` | Minimal full-duplex passthrough. ~25 lines. |
-| `examples/02_synth_vult`  | The original PicoADK Vult monosynth, ported to v3. |
+| `examples/00_template`        | Copy-and-edit scaffold with audio + MIDI + controls + USB composite already wired. |
+| `examples/01_passthrough`     | Minimal full-duplex passthrough. ~25 lines. |
+| `examples/02_synth_vult`      | The original PicoADK Vult monosynth, ported to v3. |
+| `examples/03_fx_rack`         | Stereo delay + Hadamard FDN reverb in parallel; pots morph time / feedback / size / mix; PSRAM-backed buffers on v2. |
+| `examples/04_multisampler`    | Key-mapped piano loaded from SD with 8-voice polyphony and pitch-shift to root. |
+| `examples/05_midi_controller` | No audio — pots / encoder / button forwarded as USB-MIDI CCs. Showcases Controls + Encoders + Buttons. |
 
 ```sh
 cmake --preset v2 -DPICOADK_APP=examples/00_template
@@ -150,6 +153,7 @@ cmake --preset v2-debug          # ... Debug
 | `-DPICOADK_ENABLE_SDIO=ON`         | Pull in `SDIO_RP2350` (v2). |
 | `-DPICOADK_ENABLE_SDFAT=ON`        | Pull in SdFat. |
 | `-DPICOADK_LIBPD=ON`               | Embed libpd. |
+| `-DPICOADK_ENABLE_USB_HOST=ON`     | Compile the TinyUSB host stack (pico_pio_usb). |
 
 > **VS Code:** install the official **Raspberry Pi Pico** extension. `CMakePresets.json` and `.vscode/` are pre-wired — pick a preset from the status bar and you're building.
 
@@ -205,7 +209,9 @@ lib/                   submodules (pinned)
 
 ## Status
 
-v3 is a clean-slate rewrite on the `v3-refactor` branch. **Both boards build and link with the v3 HAL today.** Hardware bring-up of the new PIO programs (TDM, SDIO), PSRAM init on v2, and USB host enumeration needs real boards on the bench — the structure and call sites are in place; the values are clearly marked.
+v3 is a clean-slate rewrite on the `v3-refactor` branch. **All five example apps build and link clean for both boards** (verified locally with `arm-none-eabi-gcc 14.2`). Hardware bring-up of the new PIO programs (TDM, SDIO), PSRAM init on v2, and USB host enumeration still needs real boards on the bench — the structure and call sites are in place; values that need verification are clearly marked.
+
+Architecture details: see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 The legacy v1/v2 firmware is preserved on `main` and on the `RP235x*` branches. Nothing was removed from there.
 
