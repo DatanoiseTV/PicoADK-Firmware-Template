@@ -46,6 +46,10 @@ alignas(4) int32_t g_buf_in [2][kMaxFrames * kMaxChannels];
 alignas(4) float   g_planar_in [kMaxChannels][kMaxFrames];
 alignas(4) float   g_planar_out[kMaxChannels][kMaxFrames];
 
+// Parallel int32 view for the int32 callback flavour.
+alignas(4) int32_t g_planar_in_i32 [kMaxChannels][kMaxFrames];
+alignas(4) int32_t g_planar_out_i32[kMaxChannels][kMaxFrames];
+
 float*       g_in_ptrs [kMaxChannels];
 float*       g_out_ptrs[kMaxChannels];
 int32_t*     g_in_int_ptrs [kMaxChannels];
@@ -236,8 +240,10 @@ bool setup(const AudioConfig& cfg) {
     if (cfg.block_size > kMaxFrames || cfg.num_channels > kMaxChannels) return false;
     g_cfg = cfg;
     for (uint8_t c = 0; c < kMaxChannels; ++c) {
-        g_in_ptrs [c]     = g_planar_in [c];
-        g_out_ptrs[c]     = g_planar_out[c];
+        g_in_ptrs      [c] = g_planar_in     [c];
+        g_out_ptrs     [c] = g_planar_out    [c];
+        g_in_int_ptrs  [c] = g_planar_in_i32 [c];
+        g_out_int_ptrs [c] = g_planar_out_i32[c];
     }
 
     const uint8_t  slots = cfg.slots_per_frame;

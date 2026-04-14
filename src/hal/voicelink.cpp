@@ -87,12 +87,17 @@ Voice    g_voices[64];
 uint8_t  g_voice_count = 0;
 uint32_t g_age_counter = 0;
 
+// CRC-8 (poly 0x07 / "CRC-8/CCITT" — same as SMBus). Streamable: pass the
+// running value back in as the seed for incremental update.
+uint8_t crc8_update(uint8_t c, uint8_t b) {
+    c ^= b;
+    for (int i = 0; i < 8; ++i)
+        c = (c & 0x80) ? (uint8_t)((c << 1) ^ 0x07) : (uint8_t)(c << 1);
+    return c;
+}
 uint8_t crc8(const uint8_t* d, std::size_t n) {
     uint8_t c = 0;
-    for (std::size_t i = 0; i < n; ++i) {
-        c ^= d[i];
-        for (int b = 0; b < 8; ++b) c = (c & 0x80) ? (uint8_t)((c << 1) ^ 0x07) : (uint8_t)(c << 1);
-    }
+    for (std::size_t i = 0; i < n; ++i) c = crc8_update(c, d[i]);
     return c;
 }
 
@@ -100,10 +105,11 @@ void send_frame(uint8_t type, uint8_t slot, const uint8_t* payload, uint8_t len)
     uint8_t hdr[4] = { SYNC, type, slot, len };
     uart_write_blocking(g_uart, hdr, 4);
     if (len) uart_write_blocking(g_uart, payload, len);
-    uint8_t buf[64];
-    memcpy(buf, hdr + 1, 3);
-    if (len) memcpy(buf + 3, payload, len);
-    uint8_t c = crc8(buf, 3 + len);
+    uint8_t c = 0;
+    c = crc8_update(c, type);
+    c = crc8_update(c, slot);
+    c = crc8_update(c, len);
+    for (uint8_t i = 0; i < len; ++i) c = crc8_update(c, payload[i]);
     uart_write_blocking(g_uart, &c, 1);
 }
 
@@ -174,12 +180,13 @@ void rx_task(void*) {
                 if (idx >= sizeof(buf)) state = S_SYNC;
                 break;
             case S_CRC: {
-                uint8_t hdr[3] = { type, slot, len };
-                uint8_t c = crc8(hdr, 3);
-                for (uint8_t i = 0; i < len; ++i) c = crc8(&buf[i], 1) ^ c;   // approximate
-                if (b == c || true /* lenient until CRC stream impl is finalised */) {
-                    handle_frame(type, slot, buf, len);
-                }
+                // Same CRC the sender computed: header bytes then payload.
+                uint8_t c = 0;
+                c = crc8_update(c, type);
+                c = crc8_update(c, slot);
+                c = crc8_update(c, len);
+                for (uint8_t i = 0; i < len; ++i) c = crc8_update(c, buf[i]);
+                if (b == c) handle_frame(type, slot, buf, len);
                 state = S_SYNC;
             } break;
         }

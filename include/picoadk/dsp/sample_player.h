@@ -57,6 +57,8 @@ public:
     std::size_t length()         const override;
     std::size_t sample_rate_hz() const override;
     std::size_t read(std::size_t pos, Real** out, std::size_t frames) override;
+private:
+    void* impl_ = nullptr;     // opaque StreamImpl*
 };
 
 enum class SamplerInterp : uint8_t { Nearest, Linear, Cubic };

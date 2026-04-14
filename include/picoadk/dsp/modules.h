@@ -24,6 +24,7 @@ public:
     Real  process();
 private:
     float sr_ = 48000.0f, phase_ = 0.0f, inc_ = 0.0f;
+    float tri_state_ = 0.0f;        // triangle leaky integrator (per-instance)
     Shape shape_ = Shape::Saw;
 };
 

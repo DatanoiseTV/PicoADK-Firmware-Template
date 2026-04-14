@@ -1,0 +1,46 @@
+# PicoADK style — close to LLVM's defaults with a few adjustments to match
+# the existing codebase. Run `clang-format -i src/<file>.cpp include/<file>.h`
+# before committing if you're touching a lot of code.
+
+BasedOnStyle: LLVM
+Language: Cpp
+
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+NamespaceIndentation: None
+AccessModifierOffset: -4
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: All
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignTrailingComments: true
+
+BreakBeforeBraces: Attach
+BreakBeforeBinaryOperators: NonAssignment
+BreakConstructorInitializers: BeforeColon
+BreakStringLiterals: true
+
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeRangeBasedForLoopColon: true
+SpacesBeforeTrailingComments: 4
+
+IncludeBlocks: Preserve
+SortIncludes: Never
+SortUsingDeclarations: false
+
+FixNamespaceComments: true
+ShortNamespaceLines: 1

@@ -157,6 +157,19 @@ if(PICOADK_LIBPD)
     target_compile_definitions(picoadk_hal PUBLIC PICOADK_LIBPD=1)
 endif()
 
+# USB host (TinyUSB host stack via pico_pio_usb second-port). Off by default
+# since it adds ~20 KB of code + a PIO state machine pair.
+if(PICOADK_ENABLE_USB_HOST)
+    target_compile_definitions(picoadk_hal PUBLIC
+        PICOADK_USB_HOST_ENABLED=1
+        CFG_TUH_ENABLED=1)
+    target_include_directories(picoadk_hal PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/lib/pico-pio-usb/src)
+    file(GLOB _picoadk_pio_usb_src
+        "${CMAKE_CURRENT_LIST_DIR}/lib/pico-pio-usb/src/*.c")
+    target_sources(picoadk_hal PRIVATE ${_picoadk_pio_usb_src})
+endif()
+
 # v2 PSRAM linker fragment is applied to the final executable in
 # examples/<app>/CMakeLists.txt — the HAL alone doesn't link an executable.
 set(PICOADK_PSRAM_LD "${CMAKE_CURRENT_LIST_DIR}/boards/picoadk_v2_psram.ld" CACHE FILEPATH "")

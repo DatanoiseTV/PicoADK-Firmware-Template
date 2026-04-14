@@ -21,7 +21,7 @@ inline float poly_blep(float t, float dt) {
     return 0.0f;
 }
 }
-void BlepOscillator::reset(float sr) { sr_ = sr; phase_ = 0.0f; }
+void BlepOscillator::reset(float sr) { sr_ = sr; phase_ = 0.0f; tri_state_ = 0.0f; }
 void BlepOscillator::set_shape(Shape s) { shape_ = s; }
 void BlepOscillator::set_freq_hz(float hz) { inc_ = hz / sr_; }
 Real BlepOscillator::process() {
@@ -35,13 +35,14 @@ Real BlepOscillator::process() {
             v -= poly_blep(std::fmod(p + 0.5f, 1.0f), inc_);
             break;
         case Shape::Triangle: {
-            // integrate square — small enough that the residual DC is fine here
+            // Per-instance leaky integrator over a band-limited square.
+            // (`tri_state_` lives on the object — earlier impl used a
+            // function-static which corrupted across instances.)
             float sq = (p < 0.5f) ? 1.0f : -1.0f;
             sq += poly_blep(p, inc_);
             sq -= poly_blep(std::fmod(p + 0.5f, 1.0f), inc_);
-            static thread_local float tri = 0.0f;
-            tri = inc_ * sq + (1.0f - inc_) * tri;
-            v = 4.0f * tri;
+            tri_state_ = inc_ * sq + (1.0f - inc_) * tri_state_;
+            v = 4.0f * tri_state_;
         } break;
     }
     phase_ += inc_;
