@@ -1,5 +1,12 @@
-build/*
+build/
+build-*/
 *.uf2
 *.bin
 *.elf
-.vscode
+*.hex
+*.map
+*.dis
+.vscode/.cache
+.cache/
+compile_commands.json
+.DS_Store
