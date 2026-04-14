@@ -100,11 +100,31 @@ struct KeyZone {
 
 class MultisamplePlayer {
 public:
+    static constexpr std::size_t kMaxVoices = 16;
+
     void   reset(float engine_sample_rate, std::size_t voice_count);
     void   set_zones(const KeyZone* zones, std::size_t count);
     void   note_on (uint8_t note, uint8_t velocity);
     void   note_off(uint8_t note);
     void   process (Real* out_l, Real* out_r, std::size_t frames);
+
+    std::size_t voice_count()  const noexcept { return voice_count_; }
+    std::size_t voices_active() const noexcept;
+
+private:
+    struct Voice {
+        SamplePlayer player;
+        uint8_t      note    = 0;
+        bool         active  = false;
+        uint32_t     age     = 0;
+        float        gain    = 1.0f;
+    };
+    Voice          voices_[kMaxVoices];
+    std::size_t    voice_count_ = 0;
+    const KeyZone* zones_       = nullptr;
+    std::size_t    zone_count_  = 0;
+    float          sr_          = 48000.0f;
+    uint32_t       age_counter_ = 0;
 };
 
 }  // namespace picoadk::dsp

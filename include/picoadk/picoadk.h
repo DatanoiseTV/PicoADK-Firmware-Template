@@ -32,4 +32,5 @@
 #include "picoadk/dsp/math.h"
 #include "picoadk/dsp/modules.h"
 #include "picoadk/dsp/sample_player.h"
+#include "picoadk/dsp/sf2.h"
 #include "picoadk/dsp/pd.h"

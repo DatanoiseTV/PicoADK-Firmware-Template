@@ -18,3 +18,6 @@
 [submodule "lib/FreeRTOS-Kernel"]
 	path = lib/FreeRTOS-Kernel
 	url = https://github.com/raspberrypi/FreeRTOS-Kernel.git
+[submodule "lib/TinySoundFont"]
+	path = lib/TinySoundFont
+	url = https://github.com/schellingb/TinySoundFont.git

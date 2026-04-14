@@ -1,13 +1,28 @@
 // Sample player + multisample manager.
 //
-// Phase 7 — initial implementation. Memory backend works against an in-RAM
-// buffer (handy for shipping a small kit in flash); the streaming backend
-// hooks into Storage HAL and double-buffers reads. Multisample picks the
-// nearest zone by note, optionally interpolating across velocity layers.
+// Three building blocks:
+//   * MemorySampleSource     — entire WAV in RAM/PSRAM. Best latency, no SD I/O.
+//   * StreamingSampleSource  — opens a WAV on SD; per-source prefetch ring so
+//                               sequential voice playback never seeks.
+//   * SamplePlayer           — one voice. Reads from any SampleSource via
+//                               2-tap linear interp; pitch + loop + speed.
+//   * MultisamplePlayer      — voice pool over a KeyZone[] keymap. Per-instance
+//                               state — multiple players coexist.
+//
+// Streaming polyphony — design notes
+// -----------------------------------------------------------------------------
+// MultisamplePlayer voices each call SampleSource::read(pos, ...) on whatever
+// source their zone points at. With a single shared StreamingSampleSource and
+// N voices reading at different positions you'd thrash the file pointer; the
+// recommended pattern is one StreamingSampleSource per zone (which SfzPlayer
+// follows). The per-source prefetch ring (`kPrefetchFrames` planar samples)
+// catches sequential reads — typical sustained playback hits the cache 100 %
+// of the time and only seeks once at note-on.
 
 #include "picoadk/dsp/sample_player.h"
 #include "picoadk/dsp/real.h"
 #include "picoadk/hal/storage.h"
+#include "picoadk/hal/psram.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -18,7 +33,6 @@ namespace picoadk::dsp {
 // ---- MemorySampleSource -------------------------------------------------
 MemorySampleSource* MemorySampleSource::load_wav_from_memory(const uint8_t* data, std::size_t bytes) {
     if (bytes < 44) return nullptr;
-    // Tiny RIFF/WAVE parser — just enough for PCM 16/24/32 mono/stereo.
     if (memcmp(data, "RIFF", 4) || memcmp(data + 8, "WAVE", 4)) return nullptr;
     uint16_t channels = (uint16_t)(data[22] | (data[23] << 8));
     uint32_t sr       = (uint32_t)(data[24] | (data[25] << 8) | (data[26] << 16) | (data[27] << 24));
@@ -33,9 +47,9 @@ MemorySampleSource* MemorySampleSource::load_wav_from_memory(const uint8_t* data
     if (!pcm) return nullptr;
 
     auto* obj = new MemorySampleSource();
-    obj->ch_ = channels;
-    obj->sr_ = sr;
-    obj->len_ = pcm_bytes / (channels * (bits / 8));
+    obj->ch_   = channels;
+    obj->sr_   = sr;
+    obj->len_  = pcm_bytes / (channels * (bits / 8));
     obj->data_ = (Real**)std::calloc(channels, sizeof(Real*));
     for (uint16_t c = 0; c < channels; ++c)
         obj->data_[c] = (Real*)std::calloc(obj->len_, sizeof(Real));
@@ -84,15 +98,10 @@ std::size_t MemorySampleSource::read(std::size_t pos, Real** out, std::size_t fr
 }
 
 // ---- StreamingSampleSource ----------------------------------------------
-//
-// Holds an open SdFat file plus a small ring buffer that the audio task
-// drains. Lazy-fills on read() with a single SD seek per discontinuous
-// position; sequential reads cost only a memcpy.
-//
-// When SdFat isn't compiled in this still compiles, just always returns
-// nullptr/0 — callers should branch on Storage::is_mounted().
 
 namespace {
+constexpr std::size_t kPrefetchFrames = 4096;     // ~32 KB per channel @ float
+
 struct StreamImpl {
 #if PICOADK_HAS_SDFAT
     FsFile        file;
@@ -101,10 +110,22 @@ struct StreamImpl {
     std::size_t   length      = 0;
     std::size_t   sample_rate = 48000;
     std::size_t   bits        = 16;
-    std::size_t   data_offset = 0;     // byte offset of the WAV data chunk
-    std::size_t   read_pos    = 0;     // current frame position in the file
+    std::size_t   data_offset = 0;
+    std::size_t   read_pos    = 0;     // file pos in frames
+
+    Real*         cache[2]    = {nullptr, nullptr};
+    std::size_t   cache_start = 0;     // first cached frame
+    std::size_t   cache_end   = 0;     // exclusive end frame; ==start ⇒ empty
 };
+
+void free_cache(StreamImpl* impl) {
+    for (auto*& p : impl->cache) {
+        if (!p) continue;
+        if (Psram::available()) Psram::free(p); else std::free(p);
+        p = nullptr;
+    }
 }
+}  // anonymous
 
 StreamingSampleSource* StreamingSampleSource::open_wav(const char* path,
                                                         std::size_t /*prefetch_frames*/) {
@@ -116,16 +137,17 @@ StreamingSampleSource* StreamingSampleSource::open_wav(const char* path,
     if (!impl->file.open(path, O_RDONLY)) { delete impl; delete obj; return nullptr; }
 
     uint8_t hdr[44];
-    if (impl->file.read(hdr, 44) != 44) { delete impl; delete obj; return nullptr; }
+    if (impl->file.read(hdr, 44) != 44) { impl->file.close(); delete impl; delete obj; return nullptr; }
     if (memcmp(hdr, "RIFF", 4) || memcmp(hdr + 8, "WAVE", 4)) {
-        delete impl; delete obj; return nullptr;
+        impl->file.close(); delete impl; delete obj; return nullptr;
     }
     impl->channels    = (uint16_t)(hdr[22] | (hdr[23] << 8));
     impl->sample_rate = (uint32_t)(hdr[24] | (hdr[25]<<8) | (hdr[26]<<16) | (hdr[27]<<24));
     impl->bits        = (uint16_t)(hdr[34] | (hdr[35] << 8));
+    if (!impl->channels || !impl->bits) {
+        impl->file.close(); delete impl; delete obj; return nullptr;
+    }
 
-    // Find the "data" chunk — after the fmt chunk RIFF can have arbitrary
-    // chunks before "data" (info, smpl, …) so we walk them.
     impl->file.seekSet(12);
     char chunk_id[4];
     uint32_t chunk_sz;
@@ -140,6 +162,15 @@ StreamingSampleSource* StreamingSampleSource::open_wav(const char* path,
         impl->file.seekCur(chunk_sz);
     }
     if (!impl->data_offset) { impl->file.close(); delete impl; delete obj; return nullptr; }
+
+    // Per-channel prefetch buffer. PSRAM-first.
+    for (std::size_t c = 0; c < impl->channels && c < 2; ++c) {
+        std::size_t bytes = kPrefetchFrames * sizeof(Real);
+        Real* mem = nullptr;
+        if (Psram::available()) mem = (Real*)Psram::alloc(bytes, 8);
+        if (!mem)               mem = (Real*)std::calloc(kPrefetchFrames, sizeof(Real));
+        impl->cache[c] = mem;
+    }
     return obj;
 #else
     (void)path;
@@ -151,6 +182,7 @@ StreamingSampleSource::~StreamingSampleSource() {
 #if PICOADK_HAS_SDFAT
     if (impl_) {
         auto* impl = static_cast<StreamImpl*>(impl_);
+        free_cache(impl);
         impl->file.close();
         delete impl;
     }
@@ -166,45 +198,70 @@ std::size_t StreamingSampleSource::sample_rate_hz() const {
     return impl_ ? static_cast<StreamImpl*>(impl_)->sample_rate : 0;
 }
 
+#if PICOADK_HAS_SDFAT
+namespace {
+// Refill the per-source prefetch ring starting at `pos`. Returns frames
+// actually loaded (up to kPrefetchFrames or end-of-file).
+std::size_t refill_cache(StreamImpl* impl, std::size_t pos) {
+    if (pos >= impl->length) { impl->cache_start = impl->cache_end = pos; return 0; }
+    std::size_t want = std::min<std::size_t>(kPrefetchFrames, impl->length - pos);
+
+    std::size_t sample_bytes = impl->bits / 8;
+    impl->file.seekSet(impl->data_offset + pos * impl->channels * sample_bytes);
+
+    static uint8_t scratch[2048];
+    std::size_t loaded = 0;
+    while (loaded < want) {
+        std::size_t blk_frames = std::min<std::size_t>(want - loaded,
+                                                       sizeof(scratch) / (impl->channels * sample_bytes));
+        std::size_t blk_bytes  = blk_frames * impl->channels * sample_bytes;
+        int got = impl->file.read(scratch, (uint32_t)blk_bytes);
+        if (got <= 0) break;
+        std::size_t got_frames = (std::size_t)got / (impl->channels * sample_bytes);
+        for (std::size_t f = 0; f < got_frames; ++f) {
+            for (std::size_t c = 0; c < impl->channels && c < 2; ++c) {
+                std::size_t off = (f * impl->channels + c) * sample_bytes;
+                float s = 0.0f;
+                switch (impl->bits) {
+                    case 16: { int16_t v = (int16_t)(scratch[off] | (scratch[off+1] << 8));
+                               s = v / 32768.0f; } break;
+                    case 24: { int32_t v = (int32_t)(scratch[off] | (scratch[off+1]<<8) | (scratch[off+2]<<16));
+                               if (v & 0x800000) v |= ~0xFFFFFF;
+                               s = v / 8388608.0f; } break;
+                    case 32: { int32_t v = (int32_t)(scratch[off] | (scratch[off+1]<<8) | (scratch[off+2]<<16) | (scratch[off+3]<<24));
+                               s = v / 2147483648.0f; } break;
+                }
+                if (impl->cache[c]) impl->cache[c][loaded + f] = from_float(s);
+            }
+        }
+        loaded += got_frames;
+        if (got_frames < blk_frames) break;
+    }
+    impl->cache_start = pos;
+    impl->cache_end   = pos + loaded;
+    impl->read_pos    = impl->cache_end;
+    return loaded;
+}
+}  // anonymous
+#endif
+
 std::size_t StreamingSampleSource::read(std::size_t pos, Real** out, std::size_t frames) {
 #if PICOADK_HAS_SDFAT
     if (!impl_) return 0;
     auto* impl = static_cast<StreamImpl*>(impl_);
     if (pos >= impl->length) return 0;
-    std::size_t n = std::min(frames, impl->length - pos);
 
-    if (pos != impl->read_pos) {
-        std::size_t sample_bytes = impl->bits / 8;
-        impl->file.seekSet(impl->data_offset + pos * impl->channels * sample_bytes);
-        impl->read_pos = pos;
+    // Cache hit?
+    if (pos < impl->cache_start || pos >= impl->cache_end) {
+        if (refill_cache(impl, pos) == 0) return 0;
     }
 
-    static uint8_t scratch[2048];
-    std::size_t bytes = n * impl->channels * (impl->bits / 8);
-    if (bytes > sizeof(scratch)) {
-        n     = sizeof(scratch) / (impl->channels * (impl->bits / 8));
-        bytes = n * impl->channels * (impl->bits / 8);
-    }
-    int got = impl->file.read(scratch, (uint32_t)bytes);
-    if (got <= 0) return 0;
-    impl->read_pos += n;
-
-    for (std::size_t f = 0; f < n; ++f) {
-        for (std::size_t c = 0; c < impl->channels && c < 2; ++c) {
-            std::size_t off = (f * impl->channels + c) * (impl->bits / 8);
-            float s = 0.0f;
-            switch (impl->bits) {
-                case 16: { int16_t v = (int16_t)(scratch[off] | (scratch[off+1] << 8));
-                           s = v / 32768.0f; } break;
-                case 24: { int32_t v = (int32_t)(scratch[off] | (scratch[off+1]<<8) | (scratch[off+2]<<16));
-                           if (v & 0x800000) v |= ~0xFFFFFF;
-                           s = v / 8388608.0f; } break;
-                case 32: { int32_t v = (int32_t)(scratch[off] | (scratch[off+1]<<8) | (scratch[off+2]<<16) | (scratch[off+3]<<24));
-                           s = v / 2147483648.0f; } break;
-            }
-            out[c][f] = from_float(s);
-        }
-    }
+    std::size_t avail   = impl->cache_end - pos;
+    std::size_t n       = std::min(frames, avail);
+    std::size_t cache_i = pos - impl->cache_start;
+    for (std::size_t c = 0; c < impl->channels && c < 2; ++c)
+        if (impl->cache[c])
+            std::memcpy(out[c], impl->cache[c] + cache_i, n * sizeof(Real));
     return n;
 #else
     (void)pos; (void)out; (void)frames;
@@ -232,8 +289,10 @@ void SamplePlayer::process(Real* out_l, Real* out_r, std::size_t frames) {
     Real lbuf[4], rbuf[4]; Real* p[2] = { lbuf, rbuf };
     for (std::size_t i = 0; i < frames; ++i) {
         std::size_t a = (std::size_t)pos_;
-        std::size_t b = a + 1;
-        if (loop_ && loop_b_ > loop_a_ && a >= loop_b_) { pos_ = (float)loop_a_; a = loop_a_; b = a + 1; }
+        if (loop_ && loop_b_ > loop_a_ && a >= loop_b_) {
+            pos_ = (float)loop_a_;
+            a    = loop_a_;
+        }
         if (a >= src_->length()) { active_ = false; break; }
         std::size_t n = src_->read(a, p, 2);
         if (n < 2) break;
@@ -246,34 +305,13 @@ void SamplePlayer::process(Real* out_l, Real* out_r, std::size_t frames) {
     }
 }
 
-// ---- MultisamplePlayer --------------------------------------------------
-//
-// Voice pool of SamplePlayer instances. note_on() picks the right zone for
-// the incoming note (smallest containing range) and assigns it to a free
-// voice (or steals the oldest). Pitch shift is the interval between the
-// note and the zone's root.
-
+// ---- MultisamplePlayer (per-instance state) -----------------------------
 namespace {
-struct MultiVoice {
-    SamplePlayer player;
-    uint8_t      note    = 0;
-    bool         active  = false;
-    uint32_t     age     = 0;
-};
-
-constexpr std::size_t kMaxMultiVoices = 16;
-MultiVoice            g_voices[kMaxMultiVoices];
-std::size_t           g_voice_count = 0;
-const KeyZone*        g_zones = nullptr;
-std::size_t           g_zone_count = 0;
-float                 g_engine_sr = 48000.0f;
-uint32_t              g_age_counter = 0;
-
-const KeyZone* find_zone(uint8_t note) {
+const KeyZone* find_zone_for(const KeyZone* zones, std::size_t count, uint8_t note) {
     const KeyZone* best = nullptr;
     int best_span = 0x7FFF;
-    for (std::size_t i = 0; i < g_zone_count; ++i) {
-        const KeyZone& z = g_zones[i];
+    for (std::size_t i = 0; i < count; ++i) {
+        const KeyZone& z = zones[i];
         if (note < z.lo_note || note > z.hi_note) continue;
         int span = (int)z.hi_note - (int)z.lo_note;
         if (span < best_span) { best = &z; best_span = span; }
@@ -283,54 +321,72 @@ const KeyZone* find_zone(uint8_t note) {
 }  // anonymous
 
 void MultisamplePlayer::reset(float sr, std::size_t voice_count) {
-    g_engine_sr   = sr;
-    g_voice_count = (voice_count < kMaxMultiVoices) ? voice_count : kMaxMultiVoices;
-    for (std::size_t i = 0; i < g_voice_count; ++i) {
-        g_voices[i] = {};
-        g_voices[i].player.reset(sr);
+    sr_           = sr;
+    voice_count_  = (voice_count < kMaxVoices) ? voice_count : kMaxVoices;
+    age_counter_  = 0;
+    for (std::size_t i = 0; i < voice_count_; ++i) {
+        voices_[i] = {};
+        voices_[i].player.reset(sr);
     }
 }
+
 void MultisamplePlayer::set_zones(const KeyZone* zones, std::size_t count) {
-    g_zones      = zones;
-    g_zone_count = count;
+    zones_      = zones;
+    zone_count_ = count;
 }
+
 void MultisamplePlayer::note_on(uint8_t note, uint8_t velocity) {
-    const KeyZone* z = find_zone(note);
+    const KeyZone* z = find_zone_for(zones_, zone_count_, note);
     if (!z || !z->source) return;
 
-    // Pick free voice; else steal oldest.
-    MultiVoice* victim = nullptr;
-    for (std::size_t i = 0; i < g_voice_count; ++i) {
-        if (!g_voices[i].active) { victim = &g_voices[i]; break; }
-    }
+    Voice* victim = nullptr;
+    for (std::size_t i = 0; i < voice_count_; ++i)
+        if (!voices_[i].active) { victim = &voices_[i]; break; }
     if (!victim) {
-        victim = &g_voices[0];
-        for (std::size_t i = 1; i < g_voice_count; ++i)
-            if (g_voices[i].age < victim->age) victim = &g_voices[i];
+        victim = &voices_[0];
+        for (std::size_t i = 1; i < voice_count_; ++i)
+            if (voices_[i].age < victim->age) victim = &voices_[i];
     }
     victim->note   = note;
     victim->active = true;
-    victim->age    = ++g_age_counter;
+    victim->age    = ++age_counter_;
+    victim->gain   = z->gain * (velocity / 127.0f);
     victim->player.set_source(z->source);
     victim->player.set_pitch_semitones((float)((int)note - (int)z->root_note));
     victim->player.set_loop(false);
     victim->player.trigger();
-    (void)velocity;     // velocity routed to gain in z->gain (Phase 7b)
 }
+
 void MultisamplePlayer::note_off(uint8_t note) {
-    for (std::size_t i = 0; i < g_voice_count; ++i) {
-        if (g_voices[i].active && g_voices[i].note == note) {
-            g_voices[i].player.stop();
-            g_voices[i].active = false;
+    for (std::size_t i = 0; i < voice_count_; ++i) {
+        if (voices_[i].active && voices_[i].note == note) {
+            voices_[i].player.stop();
+            voices_[i].active = false;
         }
     }
 }
+
 void MultisamplePlayer::process(Real* out_l, Real* out_r, std::size_t frames) {
     for (std::size_t f = 0; f < frames; ++f) { out_l[f] = 0; out_r[f] = 0; }
-    for (std::size_t i = 0; i < g_voice_count; ++i) {
-        if (g_voices[i].active) g_voices[i].player.process(out_l, out_r, frames);
-        if (!g_voices[i].player.active()) g_voices[i].active = false;
+    for (std::size_t i = 0; i < voice_count_; ++i) {
+        if (!voices_[i].active) continue;
+        Real scratch_l[128] = {0};
+        Real scratch_r[128] = {0};
+        std::size_t blk = frames > 128 ? 128 : frames;
+        voices_[i].player.process(scratch_l, scratch_r, blk);
+        const float g = voices_[i].gain;
+        for (std::size_t f = 0; f < blk; ++f) {
+            out_l[f] = from_float(to_float(out_l[f]) + to_float(scratch_l[f]) * g);
+            out_r[f] = from_float(to_float(out_r[f]) + to_float(scratch_r[f]) * g);
+        }
+        if (!voices_[i].player.active()) voices_[i].active = false;
     }
+}
+
+std::size_t MultisamplePlayer::voices_active() const noexcept {
+    std::size_t n = 0;
+    for (std::size_t i = 0; i < voice_count_; ++i) if (voices_[i].active) ++n;
+    return n;
 }
 
 }  // namespace picoadk::dsp

@@ -72,6 +72,8 @@ add_library(picoadk_hal STATIC
     src/dsp/math.cpp
     src/dsp/modules.cpp
     src/dsp/sample_player.cpp
+    src/dsp/sf2.cpp
+    src/dsp/tsf_impl.c
     src/dsp/pd.cpp
     src/dsp/vultin.cpp
     src/hal/voicelink.cpp
@@ -92,8 +94,10 @@ target_include_directories(picoadk_hal PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
     ${CMAKE_CURRENT_LIST_DIR}/boards
     ${CMAKE_CURRENT_LIST_DIR}/src
+    ${CMAKE_CURRENT_LIST_DIR}/src/usb
     ${CMAKE_CURRENT_LIST_DIR}/src/third_party/tlsf
     ${CMAKE_CURRENT_LIST_DIR}/lib/u8g2/csrc
+    ${CMAKE_CURRENT_LIST_DIR}/lib/TinySoundFont
 )
 
 # u8g2 — vendored panel driver / fonts / primitives. We compile its C
