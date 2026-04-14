@@ -21,10 +21,6 @@ bool configure(const UsbConfig& cfg) {
 }
 const UsbConfig& config() { return g_cfg; }
 
-void msc_set_sd_present(bool /*present*/) {
-    // Wired up in src/usb/msc.cpp.
-}
-
 }  // namespace picoadk::Usb
 
 // ---- C glue read by usb_descriptors.c -----------------------------------

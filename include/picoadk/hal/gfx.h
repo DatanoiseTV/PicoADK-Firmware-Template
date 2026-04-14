@@ -17,6 +17,7 @@
 
 #include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 
 extern "C" {
 #include "u8g2.h"

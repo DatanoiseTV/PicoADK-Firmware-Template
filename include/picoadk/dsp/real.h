@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "picoadk_board.h"
+
 #include <cmath>
 #include <cstdint>
 

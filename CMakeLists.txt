@@ -73,6 +73,7 @@ add_library(picoadk_hal STATIC
     src/dsp/modules.cpp
     src/dsp/sample_player.cpp
     src/dsp/pd.cpp
+    src/dsp/vultin.cpp
     src/hal/voicelink.cpp
 )
 
@@ -125,6 +126,13 @@ target_link_libraries(picoadk_hal PUBLIC
     tinyusb_board
     FreeRTOS
 )
+
+# tinyusb compiles its own sources via the tinyusb_device interface library;
+# its translation units need to find tusb_config.h in src/usb. Adding the
+# include path INTERFACE on tinyusb_common propagates correctly because
+# pico-sdk creates that target during pico_sdk_init().
+target_include_directories(tinyusb_common INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}/src/usb)
 
 if(PICOADK_BOARD STREQUAL "v2_rp2350")
     target_link_libraries(picoadk_hal PUBLIC hardware_dcp)

@@ -37,4 +37,26 @@ uint32_t sys_clock_khz();
 const char* board_name();
 
 }  // namespace System
+
+// xTaskCreatePinnedToCore — ESP-IDF-style core affinity wrapper.
+//
+//     xTaskCreatePinnedToCore(my_task, "AUDIO", 2048, nullptr, 4, &handle, 0);
+//
+// `core_id` is 0 or 1; pass tskNO_AFFINITY (= 0xFF) to let SMP balance.
+// Implemented on top of FreeRTOS SMP's vTaskCoreAffinitySet (RP2040 has SMP
+// in pico-sdk's port; RP2350 single-core for now, the call is a no-op).
+namespace Tasks {
+
+bool create_pinned(void (*entry)(void*), const char* name, uint32_t stack_words,
+                   void* arg, unsigned priority, void** out_handle, int core_id);
+
+}  // namespace Tasks
 }  // namespace picoadk
+
+// ESP32-style global alias.
+inline bool xTaskCreatePinnedToCore(void (*entry)(void*), const char* name,
+                                    uint32_t stack_words, void* arg,
+                                    unsigned priority, void** handle, int core_id) {
+    return picoadk::Tasks::create_pinned(entry, name, stack_words, arg,
+                                         priority, handle, core_id);
+}

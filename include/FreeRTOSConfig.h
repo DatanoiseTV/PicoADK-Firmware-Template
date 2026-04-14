@@ -14,6 +14,13 @@
 
 #define configUSE_PREEMPTION                    1
 #define configUSE_TIME_SLICING                  1
+
+// SMP — both v1 (RP2040) and v2 (RP2350) use Raspberry Pi's SMP-capable
+// FreeRTOS port; configNUMBER_OF_CORES=2 unlocks xTaskCreatePinnedToCore.
+#define configNUMBER_OF_CORES                   2
+#define configUSE_CORE_AFFINITY                 1
+#define configRUN_MULTIPLE_PRIORITIES           1
+#define configUSE_PASSIVE_IDLE_HOOK             0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
 
@@ -49,6 +56,7 @@
 #define configAPPLICATION_ALLOCATED_HEAP        0
 
 #define configUSE_IDLE_HOOK                     0
+#define configUSE_PASSIVE_IDLE_HOOK             0
 #define configUSE_TICK_HOOK                     0
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_MALLOC_FAILED_HOOK            0
@@ -72,6 +80,9 @@
 #  define configENABLE_MPU                      0
 #  define configENABLE_TRUSTZONE                0
 #  define configRUN_FREERTOS_SECURE_ONLY        1
+#  define configKERNEL_INTERRUPT_PRIORITY               (7 << 5)   // lowest priority
+#  define configMAX_SYSCALL_INTERRUPT_PRIORITY          (2 << 5)
+#  define configPRIO_BITS                                3
 #endif
 
 #define configASSERT( x ) do { if(!(x)) { __asm volatile("bkpt 0"); } } while(0)

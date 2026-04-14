@@ -9,13 +9,12 @@
 	path = lib/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk.git
 	branch = master
-[submodule "lib/FreeRTOS-Kernel"]
-	path = lib/FreeRTOS-Kernel
-	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
-	branch = main
 [submodule "lib/pico-pio-usb"]
 	path = lib/pico-pio-usb
 	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
 [submodule "lib/u8g2"]
 	path = lib/u8g2
 	url = https://github.com/olikraus/u8g2.git
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/raspberrypi/FreeRTOS-Kernel.git

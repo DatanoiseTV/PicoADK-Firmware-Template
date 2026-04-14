@@ -112,30 +112,59 @@ private:
 
 // ---- Time-based effects -------------------------------------------------
 
-// Delay backed by user-supplied buffer (SRAM or PSRAM).
+// Delay line. Two ways to wire the storage:
+//   * configure(buffer, length)         — bring-your-own buffer (SRAM or PSRAM)
+//   * configure_auto(seconds, sr)       — allocate from PSRAM when present,
+//                                          system heap otherwise. Recommended
+//                                          for v2 builds where SRAM is tight.
+// The auto-allocator picks PSRAM whenever `Psram::available()` returns true.
 class DelayLine {
 public:
     void  configure(Real* buffer, std::size_t length);
+    bool  configure_auto(float max_seconds, float sample_rate_hz);
+    ~DelayLine();
+
     void  set_time_samples(std::size_t s);
+    void  set_time_seconds(float seconds, float sample_rate_hz);
     void  set_feedback(float fb);
     void  set_mix(float dry_wet);
     Real  process(Real x);
+
+    std::size_t length() const noexcept { return len_; }
+    bool        in_psram() const noexcept { return owned_psram_; }
 private:
     Real* buf_ = nullptr;
     std::size_t len_ = 0, write_ = 0, time_ = 0;
     float fb_ = 0.5f, mix_ = 0.5f;
+    bool  owned_      = false;
+    bool  owned_psram_= false;
 };
 
-// FDN reverb. State buffers are user-supplied so RP2040 can keep them in
-// SRAM and v2 can route them through PSRAM.
+// FDN reverb. Auto-allocates its 8 internal delay lines from PSRAM (or the
+// system heap if PSRAM isn't available). Total footprint is roughly
+// `decay_seconds * sample_rate * 4 * 8` bytes.
 class FdnReverb {
 public:
-    void  configure(Real* state_buffer, std::size_t bytes);
+    bool  configure(float decay_seconds, float sample_rate_hz);
+    ~FdnReverb();
+
     void  reset(float sample_rate);
     void  set_size(float size);     // 0..1
     void  set_damping(float damp);  // 0..1
     void  process(const Real* in_l, const Real* in_r,
                   Real* out_l, Real* out_r, std::size_t n);
+
+    bool        in_psram() const noexcept { return in_psram_; }
+private:
+    static constexpr int kLines = 8;
+    Real*       lines_[kLines]{};
+    std::size_t line_len_ = 0;
+    std::size_t write_idx_ = 0;
+    float       sr_ = 48000.0f;
+    float       size_ = 0.7f;
+    float       damp_ = 0.4f;
+    float       lp_state_[kLines]{};
+    bool        in_psram_ = false;
 };
 
 // ---- Dynamics -----------------------------------------------------------

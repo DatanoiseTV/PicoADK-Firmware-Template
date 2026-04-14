@@ -7,6 +7,8 @@
 #include "hardware/adc.h"
 #include "hardware/spi.h"
 
+#include <initializer_list>
+
 namespace picoadk::Controls {
 
 namespace {

@@ -20,9 +20,13 @@
 #include <cstddef>
 #include <cstdint>
 
+// Linker symbols. Defined by boards/picoadk_v2_psram.ld when the linker
+// fragment is wired into the application. We declare them weak so the build
+// links even before the .ld is added (Psram::init() will simply report no
+// dynamic region available).
 extern "C" {
-extern uint8_t __psram_dynamic_start[];
-extern uint8_t __psram_dynamic_end[];
+extern uint8_t __psram_dynamic_start[] __attribute__((weak));
+extern uint8_t __psram_dynamic_end  [] __attribute__((weak));
 }
 
 namespace picoadk::Psram {
