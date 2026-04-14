@@ -50,3 +50,19 @@ jobs:
             build/${{ matrix.preset }}/app/picoadk_app.uf2
             build/${{ matrix.preset }}/app/picoadk_app.elf
           if-no-files-found: error
+
+  host-tests:
+    name: host-side DSP tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Install build tools
+        run: sudo apt-get install -y --no-install-recommends ninja-build cmake g++
+      - name: Configure
+        run: cmake -B build/tests -S tests -G Ninja
+      - name: Build
+        run: cmake --build build/tests -j$(nproc)
+      - name: Run tests
+        run: ctest --test-dir build/tests --output-on-failure

@@ -16,6 +16,9 @@ A complete from-scratch rewrite of the PicoADK firmware template. Same hardware,
 - **Storage** — SdFat with FAT32/exFAT/LFN. SDIO 4-bit on v2 via `rabbitholecomputing/SDIO_RP2350`, SPI on v1.
 - **DSP toolkit** — `dsp::Real` adapts (float on RP2350 FPU, Q16 fixed on RP2040). Hardware-accelerated helpers (RP2040 hw divider + interp, M33 DSP intrinsics). Module library: BLEP/wavetable/noise oscillators, ADSR, state-variable + ladder filters, saturator, wavefolder, delay, FDN reverb, compressor.
 - **Sampler** — WAV loader (16/24/32-bit PCM, mono/stereo), pitch shift, looping, multisample key-mapping, optional time-stretch.
+- **SoundFont 2** playback via TinySoundFont (full multisample / loop / release / modulators), loaded from PSRAM-resident memory or SD.
+- **SFZ subset** parser (regions, groups, control default_path; lokey/hikey/key/pitch_keycenter/lovel/hivel/transpose/tune/volume/loop_*) — each region opens a streaming sample source for high polyphony.
+- **Streaming polyphony** — per-`StreamingSampleSource` 4096-frame prefetch ring (PSRAM-backed when available); sequential reads hit the cache, only note-on triggers an SD seek.
 - **PureData** — optional libpd integration (`-DPICOADK_LIBPD=ON`).
 - **VoiceLink** — multi-board polyphony over 3 Mbaud UART. Auto-enumeration; per-card polyphony capacity; allocation policies (round-robin, oldest, quietest).
 - **FreeRTOS SMP** on both boards (Raspberry Pi's curated kernel fork). `xTaskCreatePinnedToCore()` ESP32-style alias.

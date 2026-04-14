@@ -107,6 +107,14 @@ SamplePlayer p; p.set_source(MemorySampleSource::load_wav_from_sd("/grand.wav"))
 ```
 TLSF heap over the v2's 8 MB QSPI PSRAM. Linker section macros (`PICOADK_PSRAM_BSS`, `PICOADK_PSRAM_DATA`). Placement-`new (PSRAM)`. Stubbed to system heap on v1 so code stays portable.
 
+### Sampler — memory, streaming, multisample, SF2, SFZ
+```cpp
+Sf2Player sf2;  sf2.load_from_sd("/grand.sf2");          // full SF2 with loops + release
+SfzPlayer sfz;  sfz.load_from_sd("/library.sfz", 12);    // streaming SFZ subset
+MultisamplePlayer ms; ms.set_zones(zones, n);            // hand-built keymap
+```
+Memory-resident, SD-streaming, and multisample modes share one MIDI surface. SF2 via [TinySoundFont](https://github.com/schellingb/TinySoundFont) (full multisample / loop / release / modulators). SFZ subset parser builds streaming sources per region. Per-source 4096-frame prefetch ring keeps SD seeks at note-on time only — sustained polyphony hits PSRAM cache.
+
 ### PureData
 Optional [libpd](https://github.com/libpd/libpd) embedded — load patches from flash or SD, route them through the audio callback. Enable with `-DPICOADK_LIBPD=ON`.
 
@@ -128,6 +136,7 @@ Raspberry Pi's curated kernel fork. `xTaskCreatePinnedToCore()` works ESP32-styl
 | `examples/03_fx_rack`         | Stereo delay + Hadamard FDN reverb in parallel; pots morph time / feedback / size / mix; PSRAM-backed buffers on v2. |
 | `examples/04_multisampler`    | Key-mapped piano loaded from SD with 8-voice polyphony and pitch-shift to root. |
 | `examples/05_midi_controller` | No audio — pots / encoder / button forwarded as USB-MIDI CCs. Showcases Controls + Encoders + Buttons. |
+| `examples/06_sf2_player`      | SoundFont 2 / SFZ player. Drop a `default.sf2` (or `default.sfz`) on the SD card, send MIDI in via USB or DIN. |
 
 ```sh
 cmake --preset v2 -DPICOADK_APP=examples/00_template
@@ -204,14 +213,18 @@ lib/                   submodules (pinned)
 | FreeRTOS-Kernel  | `raspberrypi/FreeRTOS-Kernel` (SMP for both boards) |
 | pico-pio-usb     | latest      |
 | u8g2             | latest      |
+| TinySoundFont    | latest      |
 
 ---
 
 ## Status
 
-v3 is a clean-slate rewrite on the `v3-refactor` branch. **All five example apps build and link clean for both boards** (verified locally with `arm-none-eabi-gcc 14.2`). Hardware bring-up of the new PIO programs (TDM, SDIO), PSRAM init on v2, and USB host enumeration still needs real boards on the bench — the structure and call sites are in place; values that need verification are clearly marked.
+v3 is a clean-slate rewrite on the `v3-refactor` branch. **All six example apps build and link clean for both boards** (verified locally with `arm-none-eabi-gcc 14.2`); CI builds both targets on every push and runs the host-side DSP unit tests (`tests/`). Hardware bring-up of the new PIO programs (TDM, SDIO), PSRAM init on v2, and USB host enumeration still needs real boards on the bench — the structure and call sites are in place; values that need verification are clearly marked.
 
-Architecture details: see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Documentation:
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layered model, audio pipeline, threading, memory map.
+- [docs/HAL.md](docs/HAL.md) — per-subsystem reference with code samples.
+- [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The legacy v1/v2 firmware is preserved on `main` and on the `RP235x*` branches. Nothing was removed from there.
 

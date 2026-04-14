@@ -8,6 +8,7 @@
 #include "picoadk/dsp/real.h"
 #include "picoadk/dsp/math.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 
