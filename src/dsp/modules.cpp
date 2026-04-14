@@ -311,9 +311,13 @@ Real Compressor::process(Real x_in) {
     float ax = std::fabs(x);
     env_ = (ax > env_) ? (atk_ * env_ + (1 - atk_) * ax)
                        : (rel_ * env_ + (1 - rel_) * ax);
+    // Below threshold: unity gain. Above: compress to thr + (env-thr)/ratio,
+    // express as a multiplicative gain reduction relative to env.
     float gain = 1.0f;
-    if (env_ > thr_) gain = thr_ + (env_ - thr_) / ratio_;
-    if (env_ > 0)    gain /= env_;
+    if (env_ > thr_) {
+        float target = thr_ + (env_ - thr_) / ratio_;
+        gain = target / env_;
+    }
     return from_float(x * gain);
 }
 

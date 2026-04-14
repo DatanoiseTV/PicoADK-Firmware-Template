@@ -10,7 +10,7 @@
 #     ctest --test-dir build/tests --output-on-failure
 
 cmake_minimum_required(VERSION 3.20)
-project(picoadk_tests LANGUAGES CXX)
+project(picoadk_tests LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,11 +27,15 @@ add_compile_definitions(
 add_library(picoadk_dsp_host STATIC
     ../src/dsp/modules.cpp
     ../src/dsp/math.cpp
+    ../src/dsp/sample_player.cpp
+    ../src/third_party/tlsf/tlsf.c
+    storage_host_stub.cpp
     psram_host_stub.cpp
 )
 target_include_directories(picoadk_dsp_host PUBLIC
     ../include
     ../boards
+    ../src/third_party/tlsf
 )
 
 enable_testing()
@@ -46,3 +50,9 @@ picoadk_add_test(test_oscillators)
 picoadk_add_test(test_filters)
 picoadk_add_test(test_envelope)
 picoadk_add_test(test_delay)
+picoadk_add_test(test_compressor)
+picoadk_add_test(test_robustness)
+picoadk_add_test(test_sample_player)
+picoadk_add_test(test_voicelink_crc)
+picoadk_add_test(test_real_q16)
+picoadk_add_test(test_tlsf)

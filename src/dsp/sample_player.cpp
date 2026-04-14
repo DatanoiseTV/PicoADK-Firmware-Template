@@ -24,6 +24,7 @@
 #include "picoadk/hal/storage.h"
 #include "picoadk/hal/psram.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -283,25 +284,39 @@ bool SamplePlayer::active() const noexcept { return active_; }
 
 void SamplePlayer::process(Real* out_l, Real* out_r, std::size_t frames) {
     if (!active_ || !src_) return;
-    float src_sr = src_->sample_rate_hz();
-    float step   = (src_sr / sr_) * speed_;
-    std::size_t channels = src_->channels();
-    Real lbuf[4], rbuf[4]; Real* p[2] = { lbuf, rbuf };
+    const float src_sr   = (float)src_->sample_rate_hz();
+    const float step     = (src_sr / sr_) * speed_;
+    const std::size_t ch = src_->channels();
+    const std::size_t L  = src_->length();
+    Real lbuf[2], rbuf[2]; Real* p[2] = { lbuf, rbuf };
     for (std::size_t i = 0; i < frames; ++i) {
-        std::size_t a = (std::size_t)pos_;
-        if (loop_ && loop_b_ > loop_a_ && a >= loop_b_) {
-            pos_ = (float)loop_a_;
-            a    = loop_a_;
+        // Loop wrap (handles end-of-buffer, including loop_b_ == length).
+        if (loop_ && loop_b_ > loop_a_) {
+            while (pos_ >= (float)loop_b_) pos_ -= (float)(loop_b_ - loop_a_);
         }
-        if (a >= src_->length()) { active_ = false; break; }
-        std::size_t n = src_->read(a, p, 2);
-        if (n < 2) break;
-        float frac = pos_ - (float)a;
-        float l = (1.0f - frac) * to_float(lbuf[0]) + frac * to_float(lbuf[1]);
-        float r = (channels >= 2) ? ((1.0f - frac) * to_float(rbuf[0]) + frac * to_float(rbuf[1])) : l;
+        std::size_t a = (std::size_t)pos_;
+        if (a >= L) { active_ = false; break; }
+
+        // Read frame `a` and frame `a+1` (the latter wraps when looping).
+        std::size_t b = a + 1;
+        if (loop_ && loop_b_ > loop_a_ && b >= loop_b_) b = loop_a_;
+        else if (b >= L)                                b = a;     // edge-clamp
+
+        Real bl[1], br[1]; Real* pa[2] = { lbuf,  rbuf };
+        Real bb_l[1], bb_r[1]; Real* pb[2] = { bb_l, bb_r };
+        if (src_->read(a, pa, 1) < 1) break;
+        if (b == a) { bb_l[0] = lbuf[0]; bb_r[0] = rbuf[0]; }
+        else        { src_->read(b, pb, 1); }
+
+        const float frac = pos_ - (float)a;
+        const float l    = (1.0f - frac) * to_float(lbuf[0]) + frac * to_float(bb_l[0]);
+        const float r    = (ch >= 2)
+                            ? ((1.0f - frac) * to_float(rbuf[0]) + frac * to_float(bb_r[0]))
+                            : l;
         out_l[i] = from_float(to_float(out_l[i]) + l);
         out_r[i] = from_float(to_float(out_r[i]) + r);
         pos_ += step;
+        (void)bl; (void)br;
     }
 }
 
