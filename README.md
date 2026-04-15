@@ -1,7 +1,5 @@
 <h1 align="center">PicoADK Firmware Template</h1>
 
-<p align="center"><em>Pro-quality audio firmware. One source tree. Two boards.</em></p>
-
 <p align="center">
   <a href="https://github.com/DatanoiseTV/PicoADK-Firmware-Template/actions"><img alt="build" src="https://img.shields.io/github/actions/workflow/status/DatanoiseTV/PicoADK-Firmware-Template/build.yml?branch=main"></a>
   <img alt="boards" src="https://img.shields.io/badge/boards-RP2040%20%7C%20RP2350-blue">
