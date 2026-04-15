@@ -180,8 +180,11 @@ endif()
 # examples/<app>/CMakeLists.txt — the HAL alone doesn't link an executable.
 set(PICOADK_PSRAM_LD "${CMAKE_CURRENT_LIST_DIR}/boards/picoadk_v2_psram.ld" CACHE FILEPATH "")
 
-# Generate any board PIO programs into the HAL.
-file(GLOB _picoadk_pio "${CMAKE_CURRENT_LIST_DIR}/src/hal/pio/*.pio")
+# PIO headers: our own programs + arduino-pico's vendored pio_i2s.pio
+# (LGPL 2.1, production-tested). Same umbrella for audio_engine.cpp.
+file(GLOB _picoadk_pio
+    "${CMAKE_CURRENT_LIST_DIR}/src/hal/pio/*.pio"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/arduino_pico/*.pio")
 foreach(_p IN LISTS _picoadk_pio)
     pico_generate_pio_header(picoadk_hal ${_p})
 endforeach()

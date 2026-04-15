@@ -21,8 +21,11 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#include "i2s_stereo.pio.h"
-#include "tdm.pio.h"
+// Bi-directional I²S / TDM PIO programs adopted from arduino-pico
+// (Earle F. Philhower III, LGPL 2.1). See src/third_party/arduino_pico/
+// for the original `.pio` source and license notice.
+#include "hardware/clocks.h"
+#include "pio_i2s.pio.h"
 
 namespace picoadk::audio_engine {
 
@@ -155,41 +158,78 @@ void __not_in_flash_func(audio_task)(void*) {
     }
 }
 
-// ---- Setup helpers -------------------------------------------------------
-bool setup_pio_out(uint sample_rate, uint slots_per_frame) {
+// ---- PIO setup — arduino-pico bi-directional I²S / TDM -------------------
+//
+// The vendored pio_i2s.pio ships programs + init helpers; our job here is
+// to pick the right program for the requested AudioConfig, claim the SMs
+// and load them at the right clkdiv.
+//
+//     Direction::Out  , slots <= 2   → pio_i2s_out
+//     Direction::In   , slots <= 2   → pio_i2s_in
+//     Direction::Duplex, slots <= 2  → pio_i2s_inout (shared BCK/WS)
+//     slots >= 4      → pio_tdm_out / pio_tdm_inout
+
+void set_pio_clkdiv(uint sm, uint sample_rate, uint bits, uint slots) {
+    // BCK = sample_rate * slots * bits. PIO loop runs at 2 * BCK (each cycle
+    // toggles clock + data edge).
+    float div = (float)clock_get_hz(clk_sys) /
+                ((float)sample_rate * (float)slots * (float)bits * 2.0f);
+    pio_sm_set_clkdiv(g_pio, sm, div);
+}
+
+bool setup_pio_duplex(uint sample_rate, uint bits, uint slots) {
+    if (slots >= 4) {
+        g_sm_out = pio_claim_unused_sm(g_pio, true);
+        if (g_sm_out < 0) return false;
+        uint off = pio_add_program(g_pio, &pio_tdm_inout_program);
+        pio_tdm_inout_program_init(g_pio, g_sm_out, off,
+                                   PICOADK_PIN_I2S_DIN, PICOADK_PIN_I2S_DOUT,
+                                   PICOADK_PIN_I2S_BCK, bits, slots);
+        set_pio_clkdiv(g_sm_out, sample_rate, bits, slots);
+        g_sm_in = g_sm_out;                 // same SM; RX + TX FIFO share
+        return true;
+    }
     g_sm_out = pio_claim_unused_sm(g_pio, true);
     if (g_sm_out < 0) return false;
-    if (slots_per_frame <= 2) {
-        uint off = pio_add_program(g_pio, &picoadk_i2s_out_program);
-        picoadk_i2s_out_program_init(g_pio, g_sm_out, off,
-                                     PICOADK_PIN_I2S_DOUT, PICOADK_PIN_I2S_BCK,
-                                     sample_rate);
-    } else {
-        uint off = pio_add_program(g_pio, &picoadk_tdm_out_program);
-        picoadk_tdm_out_program_init(g_pio, g_sm_out, off,
-                                     PICOADK_PIN_I2S_DOUT, PICOADK_PIN_I2S_BCK,
-                                     sample_rate, slots_per_frame);
-    }
+    uint off = pio_add_program(g_pio, &pio_i2s_inout_program);
+    pio_i2s_inout_program_init(g_pio, g_sm_out, off,
+                               PICOADK_PIN_I2S_DIN, PICOADK_PIN_I2S_DOUT,
+                               PICOADK_PIN_I2S_BCK, bits, 2);
+    set_pio_clkdiv(g_sm_out, sample_rate, bits, 2);
+    g_sm_in = g_sm_out;
     return true;
 }
 
-bool setup_pio_in(uint sample_rate, uint slots_per_frame) {
+bool setup_pio_out_only(uint sample_rate, uint bits, uint slots) {
+    g_sm_out = pio_claim_unused_sm(g_pio, true);
+    if (g_sm_out < 0) return false;
+    if (slots >= 4) {
+        uint off = pio_add_program(g_pio, &pio_tdm_out_program);
+        pio_tdm_out_program_init(g_pio, g_sm_out, off,
+                                 /*in*/0, PICOADK_PIN_I2S_DOUT,
+                                 PICOADK_PIN_I2S_BCK, bits, slots);
+    } else {
+        uint off = pio_add_program(g_pio, &pio_i2s_out_program);
+        pio_i2s_out_program_init(g_pio, g_sm_out, off,
+                                 /*in*/0, PICOADK_PIN_I2S_DOUT,
+                                 PICOADK_PIN_I2S_BCK, bits, 2);
+    }
+    set_pio_clkdiv(g_sm_out, sample_rate, bits, slots ? slots : 2);
+    return true;
+}
+
+bool setup_pio_in_only(uint sample_rate, uint bits, uint slots) {
 #if PICOADK_PIN_I2S_DIN == 255
+    (void)sample_rate; (void)bits; (void)slots;
     return false;
 #else
     g_sm_in = pio_claim_unused_sm(g_pio, true);
     if (g_sm_in < 0) return false;
-    if (slots_per_frame <= 2) {
-        uint off = pio_add_program(g_pio, &picoadk_i2s_in_program);
-        picoadk_i2s_in_program_init(g_pio, g_sm_in, off,
-                                    PICOADK_PIN_I2S_DIN, PICOADK_PIN_I2S_BCK,
-                                    sample_rate);
-    } else {
-        uint off = pio_add_program(g_pio, &picoadk_tdm_in_program);
-        picoadk_tdm_in_program_init(g_pio, g_sm_in, off,
-                                    PICOADK_PIN_I2S_DIN, PICOADK_PIN_I2S_BCK,
-                                    sample_rate, slots_per_frame);
-    }
+    uint off = pio_add_program(g_pio, &pio_i2s_in_program);
+    pio_i2s_in_program_init(g_pio, g_sm_in, off,
+                            PICOADK_PIN_I2S_DIN, /*out*/0,
+                            PICOADK_PIN_I2S_BCK, bits, 2);
+    set_pio_clkdiv(g_sm_in, sample_rate, bits, slots ? slots : 2);
     return true;
 #endif
 }
@@ -247,12 +287,18 @@ bool setup(const AudioConfig& cfg) {
     }
 
     const uint8_t  slots = cfg.slots_per_frame;
+    const uint8_t  bits  = (uint8_t)cfg.bit_depth;
     const std::size_t bytes_per_buffer = cfg.block_size * cfg.num_channels * 4;
     const bool need_out = (static_cast<uint8_t>(cfg.direction) & static_cast<uint8_t>(AudioDirection::Out)) != 0;
     const bool need_in  = (static_cast<uint8_t>(cfg.direction) & static_cast<uint8_t>(AudioDirection::In))  != 0;
 
-    if (need_out && !setup_pio_out(cfg.sample_rate_hz, slots)) return false;
-    if (need_in  && !setup_pio_in (cfg.sample_rate_hz, slots)) return false;
+    if (need_out && need_in) {
+        if (!setup_pio_duplex(cfg.sample_rate_hz, bits, slots)) return false;
+    } else if (need_out) {
+        if (!setup_pio_out_only(cfg.sample_rate_hz, bits, slots)) return false;
+    } else if (need_in) {
+        if (!setup_pio_in_only(cfg.sample_rate_hz, bits, slots)) return false;
+    }
 
     if (need_out) setup_dma_out(bytes_per_buffer);
     if (need_in)  setup_dma_in (bytes_per_buffer);
