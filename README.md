@@ -130,6 +130,7 @@ Useful flags:
 |---|---|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Layered model, audio pipeline diagram, threading model, memory map, file-by-file map. |
 | [`docs/HAL.md`](docs/HAL.md)                   | Per-subsystem reference with code samples for every public API. |
+| [`docs/OVERCLOCKING.md`](docs/OVERCLOCKING.md) | Voltage ladders + `System::set_clock_khz()` recipe. |
 | [`CHANGELOG.md`](CHANGELOG.md)                 | What changed in v3.0.0. |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)           | House rules + how to add a HAL subsystem / DSP module. |
 
