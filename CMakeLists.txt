@@ -71,6 +71,8 @@ add_library(picoadk_hal STATIC
     src/usb/msc.cpp
     src/dsp/math.cpp
     src/dsp/modules.cpp
+    src/dsp/filters.cpp
+    src/dsp/effects.cpp
     src/dsp/sample_player.cpp
     src/dsp/sf2.cpp
     src/dsp/tsf_impl.c

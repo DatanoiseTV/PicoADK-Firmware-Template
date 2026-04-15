@@ -26,6 +26,8 @@ add_compile_definitions(
 
 add_library(picoadk_dsp_host STATIC
     ../src/dsp/modules.cpp
+    ../src/dsp/filters.cpp
+    ../src/dsp/effects.cpp
     ../src/dsp/math.cpp
     ../src/dsp/sample_player.cpp
     ../src/third_party/tlsf/tlsf.c
@@ -56,3 +58,5 @@ picoadk_add_test(test_sample_player)
 picoadk_add_test(test_voicelink_crc)
 picoadk_add_test(test_real_q16)
 picoadk_add_test(test_tlsf)
+picoadk_add_test(test_more_filters)
+picoadk_add_test(test_effects)
