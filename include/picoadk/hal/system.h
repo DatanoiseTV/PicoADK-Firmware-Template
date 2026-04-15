@@ -36,6 +36,26 @@ uint32_t sys_clock_khz();
 // Board-friendly name string ("PicoADK v1 (RP2040)" / "PicoADK v2 (RP2350)").
 const char* board_name();
 
+// ---- Overclocking ---------------------------------------------------------
+//
+// Change the system clock at runtime. Voltage is bumped automatically before
+// the clock goes up using a per-board ladder; subsystems that depend on
+// sys_clk (PSRAM QMI timing, I²S PIO dividers, flash clkdiv) are notified
+// via `on_clock_changed()` so they can retune.
+//
+// Safe ranges (no guarantees beyond these — silicon lottery above):
+//   RP2040 v1:  125 MHz (stock) .. 420 MHz  @ ≤1.30 V
+//   RP2350 v2:  150 MHz (stock) .. 300 MHz  @ ≤1.25 V
+//
+// Returns false if the requested frequency is above the board's safety cap
+// or couldn't be achieved.
+
+bool     set_clock_khz(uint32_t khz);
+uint32_t max_safe_clock_khz();
+
+using ClockChangedCallback = void (*)(uint32_t new_khz);
+void     on_clock_changed(ClockChangedCallback cb);
+
 }  // namespace System
 
 // xTaskCreatePinnedToCore — ESP-IDF-style core affinity wrapper.

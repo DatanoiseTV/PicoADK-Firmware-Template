@@ -38,6 +38,48 @@ namespace {
 uint32_t g_sys_khz = PICOADK_DEFAULT_SYS_KHZ;
 bool     g_inited  = false;
 
+// ---- Overclock voltage ladder -----------------------------------------------
+//
+// Pattern borrowed from arduino-pico's RP2040Support: pick the lowest vreg
+// step that's comfortable at a given target frequency. Walk the table in
+// order, stop at the first entry whose `max_khz` is ≥ target.
+//
+// Values err on the conservative side; silicon lottery may allow more.
+struct VoltageStep {
+    uint32_t      max_khz;
+    enum vreg_voltage voltage;
+};
+
+#if PICOADK_BOARD_V1
+// RP2040 — empirically the community runs these boards at 400 MHz daily.
+constexpr VoltageStep kVoltageLadder[] = {
+    { 133000, VREG_VOLTAGE_1_10 },    // stock
+    { 225000, VREG_VOLTAGE_1_15 },
+    { 275000, VREG_VOLTAGE_1_20 },
+    { 350000, VREG_VOLTAGE_1_25 },
+    { 420000, VREG_VOLTAGE_1_30 },    // max
+};
+#else
+// RP2350 — Raspberry Pi publishes 150 MHz as the stock rate. Community
+// testing shows stable operation up to ~300 MHz at 1.25 V with PSRAM;
+// without PSRAM some boards push higher, but the QMI timing gets tight.
+constexpr VoltageStep kVoltageLadder[] = {
+    { 150000, VREG_VOLTAGE_1_10 },    // stock
+    { 225000, VREG_VOLTAGE_1_15 },
+    { 275000, VREG_VOLTAGE_1_20 },
+    { 300000, VREG_VOLTAGE_1_25 },    // max (w/ PSRAM)
+};
+#endif
+
+enum vreg_voltage voltage_for(uint32_t khz) {
+    for (const auto& s : kVoltageLadder)
+        if (khz <= s.max_khz) return s.voltage;
+    return kVoltageLadder[sizeof(kVoltageLadder) / sizeof(kVoltageLadder[0]) - 1].voltage;
+}
+
+constexpr std::size_t kMaxClockChangedCallbacks = 4;
+ClockChangedCallback g_clock_cbs[kMaxClockChangedCallbacks] = {};
+
 // ---- USB-CDC stdio driver ----------------------------------------------
 // Routes pico-sdk's stdio_driver writes through TinyUSB CDC. Reads are
 // best-effort (CDC RX is small); writes auto-flush. Multiple stdio drivers
@@ -77,11 +119,11 @@ void init(const SystemConfig& cfg) {
     g_inited = true;
 
     uint32_t khz = cfg.sys_clock_khz ? cfg.sys_clock_khz : PICOADK_DEFAULT_SYS_KHZ;
-    if (khz > PICOADK_MAX_SYS_KHZ) khz = PICOADK_MAX_SYS_KHZ;
+    if (khz > max_safe_clock_khz()) khz = max_safe_clock_khz();
 
-#if PICOADK_BOARD_V1
-    if (khz > 250000) { vreg_set_voltage(VREG_VOLTAGE_1_30); sleep_ms(1); }
-#endif
+    // Bring core voltage up BEFORE raising the clock.
+    vreg_set_voltage(voltage_for(khz));
+    sleep_ms(2);
     set_sys_clock_khz(khz, true);
     g_sys_khz = khz;
 
@@ -108,6 +150,42 @@ uint64_t micros()          { return to_us_since_boot(get_absolute_time()); }
 uint32_t millis()          { return to_ms_since_boot(get_absolute_time()); }
 uint32_t sys_clock_khz()   { return g_sys_khz; }
 const char* board_name()   { return PICOADK_BOARD_NAME; }
+
+uint32_t max_safe_clock_khz() {
+    return kVoltageLadder[sizeof(kVoltageLadder) / sizeof(kVoltageLadder[0]) - 1].max_khz;
+}
+
+bool set_clock_khz(uint32_t khz) {
+    if (khz > max_safe_clock_khz()) return false;
+
+    // If we're going DOWN, clock first then drop voltage.
+    // If we're going UP, raise voltage first, wait, then clock.
+    const bool going_up = khz > g_sys_khz;
+    const enum vreg_voltage target_v = voltage_for(khz);
+
+    if (going_up) {
+        vreg_set_voltage(target_v);
+        sleep_ms(2);
+    }
+    if (!set_sys_clock_khz(khz, false)) return false;
+    g_sys_khz = khz;
+    if (!going_up) {
+        vreg_set_voltage(target_v);
+        // No post-wait needed when dropping voltage.
+    }
+
+    // Tell PSRAM / I²S / anything clock-bound to retune.
+    for (auto cb : g_clock_cbs) if (cb) cb(khz);
+    return true;
+}
+
+void on_clock_changed(ClockChangedCallback cb) {
+    for (auto& slot : g_clock_cbs) {
+        if (!slot) { slot = cb; return; }
+    }
+    // Silent drop if we run out of slots; at most `kMaxClockChangedCallbacks`
+    // subsystems can register. Bump the cap if we need more.
+}
 
 }  // namespace picoadk::System
 
