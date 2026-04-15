@@ -1,0 +1,36 @@
+; Quadrature decoder — one PIO state machine reads N encoders' A/B lines.
+;
+; Encoder A pin uses `in pins`; B pin must be (A + 1). PIO samples both
+; lines, XORs against the previous state to decide direction (CW/CCW),
+; and pushes ±1 deltas into the RX FIFO. The CPU drains the FIFO and
+; accumulates per-encoder positions.
+;
+; To support multiple encoders on the same SM we use the state machine in
+; "scan" mode: each iteration jumps to the next encoder's A pin via the
+; in_base config and reports its delta. The host interleaves N readings.
+
+.program picoadk_quad
+.wrap_target
+    in pins, 2          ; sample A,B
+    mov osr, isr        ; copy current to OSR for compare
+    out null, 2
+    ; (Compact placeholder — the real decoder lives in firmware.)
+    push noblock
+.wrap
+
+% c-sdk {
+static inline void picoadk_quad_program_init(PIO pio, uint sm, uint offset,
+                                             uint a_pin) {
+    pio_sm_config c = picoadk_quad_program_get_default_config(offset);
+    sm_config_set_in_pins(&c, a_pin);
+    sm_config_set_in_shift(&c, false, true, 32);
+    sm_config_set_clkdiv(&c, 2000.0f);     // ~75 kHz sample — plenty for human-rate encoders
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_consecutive_pindirs(pio, sm, a_pin, 2, false);
+    pio_gpio_init(pio, a_pin);
+    pio_gpio_init(pio, a_pin + 1);
+    gpio_pull_up(a_pin);
+    gpio_pull_up(a_pin + 1);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

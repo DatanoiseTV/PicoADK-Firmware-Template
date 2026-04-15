@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+    branches: [main, v3-refactor]
+  pull_request:
+    branches: [main, v3-refactor]
+
+jobs:
+  build:
+    name: ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [v1, v2]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Install ARM toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '14.2.Rel1'
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ninja-build cmake python3
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }} -j$(nproc)
+
+      - name: Show artifacts
+        run: |
+          ls -la build/${{ matrix.preset }}/app/picoadk_app.{uf2,elf,bin} || true
+          arm-none-eabi-size build/${{ matrix.preset }}/app/picoadk_app.elf || true
+
+      - name: Upload UF2
+        uses: actions/upload-artifact@v4
+        with:
+          name: picoadk-${{ matrix.preset }}-uf2
+          path: |
+            build/${{ matrix.preset }}/app/picoadk_app.uf2
+            build/${{ matrix.preset }}/app/picoadk_app.elf
+          if-no-files-found: error
+
+  host-tests:
+    name: host-side DSP tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Install build tools
+        run: sudo apt-get install -y --no-install-recommends ninja-build cmake g++
+      - name: Configure
+        run: cmake -B build/tests -S tests -G Ninja
+      - name: Build
+        run: cmake --build build/tests -j$(nproc)
+      - name: Run tests
+        run: ctest --test-dir build/tests --output-on-failure

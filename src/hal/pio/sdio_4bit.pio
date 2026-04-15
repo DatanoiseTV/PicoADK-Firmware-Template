@@ -1,0 +1,16 @@
+; PicoADK SDIO 4-bit — high-speed PIO driver (Phase 4).
+;
+; The full SDIO 4-bit state machine implementation will land here in Phase 4.
+; Reserved for proximity to the rest of the PIO programs so build glob picks
+; it up automatically.
+
+.program picoadk_sdio_4bit
+.wrap_target
+    nop
+.wrap
+
+% c-sdk {
+static inline void picoadk_sdio_4bit_program_init(PIO pio, uint sm, uint offset) {
+    (void)pio; (void)sm; (void)offset;
+}
+%}

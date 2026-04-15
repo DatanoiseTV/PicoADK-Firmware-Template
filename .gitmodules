@@ -1,6 +1,23 @@
-[submodule "lib/pico-extras"]
-	path = lib/pico-extras
-	url = https://github.com/DatanoiseTV/pico-extras.git
 [submodule "lib/vult"]
 	path = lib/vult
 	url = https://github.com/vult-dsp/vult.git
+[submodule "lib/pico-extras"]
+	path = lib/pico-extras
+	url = https://github.com/raspberrypi/pico-extras.git
+	branch = master
+[submodule "lib/pico-sdk"]
+	path = lib/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git
+	branch = master
+[submodule "lib/pico-pio-usb"]
+	path = lib/pico-pio-usb
+	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
+[submodule "lib/u8g2"]
+	path = lib/u8g2
+	url = https://github.com/olikraus/u8g2.git
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/raspberrypi/FreeRTOS-Kernel.git
+[submodule "lib/TinySoundFont"]
+	path = lib/TinySoundFont
+	url = https://github.com/schellingb/TinySoundFont.git

@@ -1,0 +1,22 @@
+[
+    {
+        "name": "PicoADK v1 (RP2040)",
+        "compilers": {
+            "C":   "${env:PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-gcc",
+            "CXX": "${env:PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-g++"
+        },
+        "cmakeSettings": {
+            "PICOADK_BOARD": "v1_rp2040"
+        }
+    },
+    {
+        "name": "PicoADK v2 (RP2350)",
+        "compilers": {
+            "C":   "${env:PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-gcc",
+            "CXX": "${env:PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-g++"
+        },
+        "cmakeSettings": {
+            "PICOADK_BOARD": "v2_rp2350"
+        }
+    }
+]
